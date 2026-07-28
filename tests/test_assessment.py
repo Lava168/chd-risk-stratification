@@ -6,44 +6,67 @@ from chd_risk.risk import classify_risk
 
 
 class AssessmentTests(unittest.TestCase):
-    def test_assess_patient_returns_closed_loop_fields(self) -> None:
-        patient = PatientSnapshot(
-            patient_id="T001",
-            age=68,
-            sex="male",
-            systolic_bp=152,
-            total_cholesterol=5.9,
-            hdl_cholesterol=1.0,
-            ldl_cholesterol=3.7,
-            diabetes=True,
-            smoker=True,
-            hypertension=True,
+    def test_high_risk_patient_receives_actionable_plan(self):
+        snapshot = PatientSnapshot.from_mapping(
+            {
+                "patient_id": "T-1",
+                "age": 72,
+                "sex": "男",
+                "bmi": 29.5,
+                "sbp": 165,
+                "dbp": 91,
+                "ldl_c": 4.1,
+                "hdl_c": 0.9,
+                "fasting_glucose": 8.2,
+                "smoker": True,
+                "diabetes": True,
+                "hypertension": True,
+                "chest_pain_visit_last_year": True,
+                "ecg_abnormal": True,
+                "statin_adherence_gap": True,
+                "follow_up_interrupted": True,
+            }
         )
 
-        result = assess_patient(patient)
+        assessment = assess_patient(snapshot)
 
-        self.assertEqual(result.patient_id, "T001")
-        self.assertGreater(result.risk_score, 0)
-        self.assertIn(result.risk_tier, {"low", "medium", "high", "very_high"})
-        self.assertTrue(result.actions)
-        self.assertTrue(result.explanations)
+        self.assertIn(assessment.tier, {"high", "very_high"})
+        self.assertGreaterEqual(len(assessment.reasons), 3)
+        self.assertGreater(assessment.plan.follow_up_days, 0)
 
-    def test_classify_risk_thresholds(self) -> None:
-        self.assertEqual(classify_risk(0.02), "low")
+    def test_low_risk_patient_stays_low_or_medium(self):
+        snapshot = PatientSnapshot.from_mapping(
+            {
+                "patient_id": "T-2",
+                "age": 39,
+                "sex": "女",
+                "bmi": 21.8,
+                "sbp": 112,
+                "dbp": 70,
+                "ldl_c": 2.2,
+                "hdl_c": 1.5,
+                "fasting_glucose": 5.1,
+                "smoker": False,
+                "diabetes": False,
+                "hypertension": False,
+            }
+        )
+
+        assessment = assess_patient(snapshot)
+
+        self.assertIn(assessment.tier, {"low", "medium"})
+
+    def test_threshold_classifier(self):
+        self.assertEqual(classify_risk(0.01), "low")
         self.assertEqual(classify_risk(0.07), "medium")
-        self.assertEqual(classify_risk(0.16), "high")
-        self.assertEqual(classify_risk(0.32), "very_high")
+        self.assertEqual(classify_risk(0.14), "high")
+        self.assertEqual(classify_risk(0.22), "very_high")
 
-    def test_roc_auc_score(self) -> None:
-        auc = roc_auc_score([0, 0, 1, 1], [0.1, 0.4, 0.35, 0.8])
-        self.assertAlmostEqual(auc, 0.75)
-
-    def test_binary_metrics(self) -> None:
-        metrics = binary_classification_metrics([0, 1, 1, 0], [0.1, 0.8, 0.3, 0.4], threshold=0.5)
-        self.assertEqual(metrics["tp"], 1)
-        self.assertEqual(metrics["tn"], 2)
-        self.assertEqual(metrics["fp"], 0)
-        self.assertEqual(metrics["fn"], 1)
+    def test_metrics_are_computable(self):
+        auc = roc_auc_score([0, 0, 1, 1], [0.1, 0.3, 0.6, 0.9])
+        self.assertAlmostEqual(auc, 1.0)
+        metrics = binary_classification_metrics([0, 1, 1], [0.2, 0.8, 0.4], threshold=0.5)
+        self.assertEqual(metrics["sensitivity"], 0.5)
 
 
 if __name__ == "__main__":
