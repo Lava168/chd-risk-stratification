@@ -40,7 +40,7 @@ def generate_synthetic_records(n: int = 200, seed: int = 42) -> list[dict]:
             "dbp": round(random.gauss(76 + (3 if hypertension else 0), 7), 0),
             "total_chol": round(random.gauss(4.8, 0.9), 2),
             "ldl_c": round(random.gauss(2.7 + (0.2 if diabetes else 0), 0.65), 2),
-            "hdl_c": round(random.gauss(1.18 if male else 1.34, 0.24), 2),
+            "hdl_c": round(min(max(random.gauss(1.18 if male else 1.34, 0.24), 0.4), 3.0), 2),
             "fasting_glucose": round(random.gauss(6.4 if diabetes else 5.3, 0.8), 2),
             "smoker": _yes_no(0.30 if male else 0.08),
             "diabetes": diabetes,
@@ -68,7 +68,7 @@ def write_synthetic_csv(path: str | Path, n: int = 200, seed: int = 42) -> Path:
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", newline="", encoding="utf-8") as handle:
-        writer = csv.DictWriter(handle, fieldnames=FIELDNAMES)
+        writer = csv.DictWriter(handle, fieldnames=FIELDNAMES, lineterminator="\n")
         writer.writeheader()
         writer.writerows(generate_synthetic_records(n=n, seed=seed))
     return path
