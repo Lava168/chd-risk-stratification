@@ -34,16 +34,16 @@
 
 ```bash
 cd /Users/mac/Documents/chd-risk-closed-loop
-PYTHONPATH=src python -m chd_risk.cli score-one examples/sample_patient.json
-PYTHONPATH=src python -m chd_risk.cli generate-synthetic --n 200 --output data/synthetic_patients.csv
-PYTHONPATH=src python -m chd_risk.cli score-csv data/synthetic_patients.csv --output outputs/scored_patients.csv
-PYTHONPATH=src python -m unittest discover -s tests
+PYTHONPATH=src python3 -m chd_risk.cli score-one examples/sample_patient.json
+PYTHONPATH=src python3 -m chd_risk.cli generate-synthetic --n 200 --output data/synthetic_patients.csv
+PYTHONPATH=src python3 -m chd_risk.cli score-csv data/synthetic_patients.csv --output outputs/scored_patients.csv
+PYTHONPATH=src python3 -m unittest discover -s tests
 ```
 
 安装为本地包：
 
 ```bash
-python -m venv .venv
+python3 -m venv .venv
 source .venv/bin/activate
 pip install -e .
 chd-risk score-one examples/sample_patient.json
