@@ -1,0 +1,27 @@
+.DS_Store
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+build/
+dist/
+*.egg-info/
+
+# Local data and model artifacts
+data/raw/
+data/processed/
+models/*.joblib
+models/*.pkl
+outputs/*
+!outputs/.gitkeep
+
+# Patient-level files should stay outside git unless they are synthetic examples.
+*.xlsx
+*.xls
+*.sav
+*.dta
+*.parquet
+
