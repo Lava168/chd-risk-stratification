@@ -1,0 +1,41 @@
+field_name,chinese_name,type,unit_or_values,required_for,source_candidate,derivation_notes
+patient_id,去标识化患者ID,string,hash/research_id,all_models,master_patient_index,Do not export name ID card phone address insurance card or raw medical record number.
+index_date,基准评估日期,date,YYYY-MM-DD,all_models,research_cohort,One index date per person; predictors must be measured before or on this date.
+age,年龄,integer,years,all_models,master_patient_index,Calculate at index_date when birth_date is available.
+sex,性别,string,男/女,all_models,master_patient_index,Normalize values before modeling.
+urban_rural,城乡,string,urban/rural,china_par_or_recalibration,public_health_or_address_mapping,Use approved de-identified area mapping only.
+region_north_south,南北方地区,string,north/south,china_par_or_recalibration,facility_or_area_mapping,Needed if using China-PAR-style baseline.
+bmi,体重指数,float,kg/m2,baseline_and_ml,physical_exam_or_public_health,Can derive from height and weight.
+waist_circumference,腰围,float,cm,china_par_or_recalibration,physical_exam_or_public_health,Useful for China-PAR-style risk estimation.
+sbp,收缩压,float,mmHg,all_models,vitals_or_public_health,Use most recent valid value in baseline window or prespecified aggregate.
+dbp,舒张压,float,mmHg,all_models,vitals_or_public_health,Use most recent valid value in baseline window or prespecified aggregate.
+total_chol,总胆固醇,float,mmol/L,china_par_or_recalibration,LIS,Record test date and unit conversion rules.
+ldl_c,低密度脂蛋白胆固醇,float,mmol/L,local_ml,LIS,Use structured lab result when available.
+hdl_c,高密度脂蛋白胆固醇,float,mmol/L,china_par_or_recalibration,LIS,Use structured lab result when available.
+fasting_glucose,空腹血糖,float,mmol/L,local_ml,LIS,Use structured lab result when available.
+smoker,吸烟状态,boolean,0/1,all_models,public_health_or_EMR,Define current smoker consistently.
+diabetes,糖尿病,boolean,0/1,all_models,diagnosis_public_health_or_medication,Use diagnosis codes chronic disease registry or diabetes medication evidence.
+hypertension,高血压,boolean,0/1,all_models,diagnosis_public_health_or_medication,Use diagnosis codes chronic disease registry or antihypertensive medication evidence.
+ckd,慢性肾病,boolean,0/1,local_ml,diagnosis_or_LIS,Can derive from diagnosis or eGFR rule.
+atrial_fibrillation,房颤,boolean,0/1,local_ml,diagnosis_or_ECG,Use structured diagnosis or ECG report abstraction.
+family_history_chd,冠心病家族史,boolean,0/1,china_par_or_recalibration,questionnaire_or_EMR,Text extraction requires manual validation.
+chest_pain_visit_last_year,近1年胸痛就诊,boolean,0/1,local_ml,HIS_or_EMR,Define by diagnosis chief complaint or symptom terms in prior 365 days.
+ecg_abnormal,心电图异常,boolean,0/1,local_ml,PACS_or_ECG_report,Prefer structured ECG conclusion mapping.
+carotid_ultrasound_abnormal,颈动脉超声异常,boolean,0/1,local_ml,PACS_report,Define plaque stenosis or IMT rule before extraction.
+antihypertensive_use,降压药使用,boolean,0/1,local_ml,medication_orders_or_prescriptions,Use ATC/drug dictionary mapping.
+lipid_lowering_use,降脂药使用,boolean,0/1,local_ml,medication_orders_or_prescriptions,Include statins and other lipid-lowering drugs per protocol.
+antiplatelet_use,抗血小板药使用,boolean,0/1,local_ml,medication_orders_or_prescriptions,Use medication dictionary mapping.
+statin_adherence_gap,他汀用药不连续,boolean,0/1,closed_loop_ml,pharmacy_or_follow_up,Define gap threshold such as no refill for more than 90 days.
+medication_adherence_rate,用药依从率,float,0-1,closed_loop_ml,pharmacy_or_follow_up,Specify numerator denominator and observation window.
+follow_up_interrupted,随访中断,boolean,0/1,closed_loop_ml,public_health_follow_up,Define overdue threshold by risk group.
+outpatient_visits_12m,近12个月门诊次数,integer,count,local_ml,HIS,Count before index_date.
+emergency_visits_12m,近12个月急诊次数,integer,count,local_ml,HIS,Count before index_date.
+sbp_trend_6m,6个月收缩压趋势,float,mmHg or mmHg/month,local_ml,vitals_or_public_health,Predefine slope or last-minus-first.
+ldl_trend_6m,6个月LDL-C趋势,float,mmol/L or mmol/L/month,local_ml,LIS,Predefine slope or last-minus-first.
+prior_chd,基线前冠心病史,boolean,0/1,cohort_definition,diagnosis_or_procedure,Exclude for primary-prevention incident CHD model; retain for secondary-prevention stratification.
+prior_mi,基线前心肌梗死史,boolean,0/1,cohort_definition,diagnosis,Used for exclusion or secondary-prevention model.
+prior_pci_cabg,基线前PCI/CABG史,boolean,0/1,cohort_definition,procedure_or_diagnosis,Used for exclusion or secondary-prevention model.
+outcome_chd,随访期冠心病结局,boolean,0/1,all_training,hospitalization_diagnosis_procedure_death_follow_up,Must be after index_date within defined prediction horizon.
+outcome_date,结局日期,date,YYYY-MM-DD,all_training,hospitalization_diagnosis_procedure_death_follow_up,First eligible event date after index_date.
+followup_end_date,随访截止日期,date,YYYY-MM-DD,all_training,last_encounter_public_health_or_registry,Required for censoring and negative labels.
+data_split,数据划分,string,train/validation/test/time_external,validation,analysis_protocol,Assign by patient not by visit; prefer temporal validation when possible.

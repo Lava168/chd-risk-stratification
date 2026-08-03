@@ -33,7 +33,6 @@
 ## 快速运行
 
 ```bash
-cd /Users/mac/Documents/chd-risk-closed-loop
 PYTHONPATH=src python3 -m chd_risk.cli score-one examples/sample_patient.json
 PYTHONPATH=src python3 -m chd_risk.cli generate-synthetic --n 200 --output data/synthetic_patients.csv
 PYTHONPATH=src python3 -m chd_risk.cli score-csv data/synthetic_patients.csv --output outputs/scored_patients.csv
@@ -67,11 +66,25 @@ uvicorn chd_risk.api:app --reload
 chd-risk train-tabular data/deidentified_research_table.csv --outcome-col outcome_chd
 ```
 
+## Stage B 本地数据可行性评估
+
+Stage B 用于检查本地 HIS/EMR/检查报告导出是否具备建模条件。该模块只输出聚合统计和缺口清单，不提交原始 Excel、患者级记录、病历文本或个体预测结果。
+
+```bash
+python3 scripts/stage_b_local_data_feasibility.py \
+  --workbook "/path/to/local_real_world_extract.xlsx" \
+  --sheet "冠心病21" \
+  --output-dir outputs/stage_b_local_data
+```
+
+本次本地 Excel 摸底结论见 `docs/stage_b_local_data_feasibility.md`。数据科导出一人一行研究宽表时，可参考 `data/stage_b_research_table_schema.csv`。
+
 ## 当前实现边界
 
 - `src/chd_risk/china_par.py` 是 China-PAR 适配边界。因申报书没有提供正式系数，仓库只放了开发用 proxy，不能当成真实 China-PAR 公式。
 - `src/chd_risk/model.py` 是透明权重模型，用于跑通软件流程。真实项目应替换为本地队列训练和校准后的模型。
 - `data/` 只允许放合成数据或脱敏后的结构模板，真实患者级数据不应提交到 GitHub。
+- `scripts/stage_b_local_data_feasibility.py` 只是本地真实世界数据可行性审计，不会训练模型，也不代表临床验证完成。
 
 ## 下一步
 
