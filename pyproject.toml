@@ -42,9 +42,11 @@ plots = [
 target-version = "py39"
 
 [tool.ruff.lint.per-file-ignores]
-# Pydantic v2 evaluates model field annotations at runtime; `X | None` crashes on
-# Python 3.9, so api.py keeps Optional[...] (UP045 intentionally disabled).
-"src/chd_risk/api.py" = ["UP045"]
+# Pydantic v2 + FastAPI evaluate annotations at runtime on Python 3.9:
+# `X | None` crashes (UP045) and `from __future__ import annotations` breaks
+# FastAPI body resolution for nested models (FA100). api.py intentionally uses
+# Optional[...] without the future import.
+"src/chd_risk/api.py" = ["UP045", "FA100"]
 
 [project.scripts]
 chd-risk = "chd_risk.cli:main"

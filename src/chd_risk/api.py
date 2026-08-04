@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from .assessment import assess_patient, assess_with_bundle
 from .model_registry import load_bundle
 from .schema import PatientSnapshot
