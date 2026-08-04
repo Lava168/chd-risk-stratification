@@ -62,7 +62,12 @@ def create_app():
             snapshot = PatientSnapshot.from_mapping(payload.model_dump())
         except ValueError as exc:
             raise HTTPException(status_code=422, detail=str(exc)) from exc
-        bundle = load_bundle()
+        try:
+            bundle = load_bundle()
+        except Exception as exc:  # model exists but cannot load (e.g. missing libomp)
+            bundle = None
+            print(f"[chd-risk] trained model unavailable ({type(exc).__name__}: {exc}); "
+                  "falling back to weighted prototype")
         if bundle is None:
             return assess_patient(snapshot).to_dict()
         return assess_with_bundle(snapshot, bundle).to_dict()

@@ -252,6 +252,28 @@ python -m uvicorn chd_risk.api:app --host 127.0.0.1 --port 8765
 
 > macOS 安装包：`release/CHD-Risk-Stratification-macOS-arm64.zip`（Apple Silicon）。
 
+## ⚠️ macOS 依赖：libomp（xgboost 需要 OpenMP 运行时）
+
+xgboost 在 macOS 上需要 `libomp.dylib`，否则训练模型加载失败（评分会回退到权重原型）。
+本机已把 `libomp.dylib` 放在 `.venv/lib/libomp/`。由于 macOS 只在进程启动时读取 `DYLD_*` 环境变量，
+**请用启动脚本运行桌面应用/API**：
+
+```bash
+./scripts/run_desktop.sh                 # 桌面应用（自动配置 libomp）
+./scripts/run_desktop.sh --no-window     # 仅启动本地 API 服务
+```
+
+等价手动方式：
+
+```bash
+export DYLD_FALLBACK_LIBRARY_PATH="$PWD/.venv/lib/libomp"
+python desktop.py
+```
+
+> 打包版 macOS App 已在构建时用 `install_name_tool` 把 libomp 路径写死（`scripts/build_desktop.sh`），无需环境变量。
+> 若 `/assess` 提示"评估失败"，多半是 libomp 未配置；修复后会自动回退到权重原型并给出 `model_source=weighted_prototype`。
+
+## 快速运行
 ## 快速运行
 
 ```bash

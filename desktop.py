@@ -32,8 +32,13 @@ def _setup_paths() -> Path:
         os.environ.setdefault(
             "CHD_RISK_MODEL_PATH", str(Path(__file__).resolve().parent / "models" / "trained_model_bundle.joblib")
         )
-    # macOS: expose bundled libomp so xgboost can load its OpenMP runtime.
+    # macOS: expose libomp so xgboost can load its OpenMP runtime.
     libomp_dir = base / "libomp"
+    if not libomp_dir.exists():
+        # Dev fallback: libomp lives in the local venv.
+        venv_libomp = Path(__file__).resolve().parent / ".venv" / "lib" / "libomp"
+        if venv_libomp.exists():
+            libomp_dir = venv_libomp
     if libomp_dir.exists():
         os.environ["DYLD_FALLBACK_LIBRARY_PATH"] = (
             str(libomp_dir) + os.environ.get("DYLD_FALLBACK_LIBRARY_PATH", ":/usr/local/lib:/usr/lib")

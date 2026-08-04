@@ -19,6 +19,21 @@ if [ ! -d "$APP" ]; then
   exit 1
 fi
 
+# macOS: repoint @rpath/libomp.dylib inside the frozen xgboost to the bundled
+# libomp so the app works WITHOUT any DYLD_* env var at launch.
+if [ "$(uname)" = "Darwin" ]; then
+  XGB="$(find "$APP/Contents" -name "libxgboost.dylib" 2>/dev/null | head -1 || true)"
+  LIBOMP="$(find "$APP/Contents" -name "libomp.dylib" 2>/dev/null | head -1 || true)"
+  if [ -n "$XGB" ] && [ -n "$LIBOMP" ]; then
+    echo "[build] repointing libomp inside frozen xgboost..."
+    REL="$(python3 -c "import os;print(os.path.relpath('$LIBOMP', os.path.dirname('$XGB')))")"
+    install_name_tool -change "@rpath/libomp.dylib" "@loader_path/$REL" "$XGB" || true
+    codesign --force --sign - "$XGB" "$LIBOMP" 2>/dev/null || true
+  else
+    echo "[build] WARNING: libomp/libxgboost not found; packaged app may need DYLD_FALLBACK_LIBRARY_PATH at launch" >&2
+  fi
+fi
+
 mkdir -p release
 ZIP="release/CHD-Risk-Stratification-macOS-arm64.zip"
 rm -f "$ZIP"
