@@ -67,6 +67,20 @@ def create_app():
             return assess_patient(snapshot).to_dict()
         return assess_with_bundle(snapshot, bundle).to_dict()
 
+    # Serve the doctor-friendly UI from ./ui when present.
+    from pathlib import Path
+
+    from fastapi.responses import RedirectResponse
+    from fastapi.staticfiles import StaticFiles
+
+    ui_dir = Path(__file__).resolve().parent.parent / "ui"
+    if ui_dir.exists():
+        app.mount("/ui", StaticFiles(directory=str(ui_dir), html=True), name="ui")
+
+        @app.get("/", include_in_schema=False)
+        def root() -> RedirectResponse:
+            return RedirectResponse(url="/ui/")
+
     return app
 
 

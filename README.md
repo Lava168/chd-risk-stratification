@@ -123,3 +123,36 @@ python3 scripts/stage_b_local_data_feasibility.py \
 - DCA、NRI/IDI、Cox 生存分析、校准曲线图。
 - 将评分结果嵌入随访、复评、转诊和反馈闭环表单。
 - 伦理审查、临床专家复核与上线审批。
+
+
+## 模型报告图
+
+以下图为本地研究宽表（246 例，结局：是否住院）训练 XGBoost 部署模型时生成的报告图，
+用于展示队列、模型表现与风险解释流程。仅用于展示，不代表临床验证结论。
+
+![图1 队列基线特征](outputs/figures/fig1_cohort.png)
+
+*图1：队列人群基线特征（性别、年龄等分布）*
+
+![图2 时间外验证 ROC](outputs/figures/fig2_roc_temporal.png)
+
+*图2：时间外验证 ROC 曲线（XGBoost 时间外 AUC 0.835）*
+
+![图3 校准曲线](outputs/figures/fig3_calibration.png)
+
+*图3：校准曲线（预测概率 vs 实际发生率）*
+
+![图4 SHAP 特征重要性](outputs/figures/fig4_shap.png)
+
+*图4：SHAP 特征重要性排序（主要风险来源解释）*
+
+![图5 风险分层](outputs/figures/fig5_tiers.png)
+
+*图5：四级风险分层（分数分位数档位：低危/中危/高危/极高危）*
+
+![图6 多模型对比](outputs/figures/fig6_model_compare.png)
+
+*图6：多模型性能对比（CV AUC 与时间外 AUC）*
+
+> 说明：这些图基于本地示例研究宽表生成，仅用于验证训练-评估-报告软件流程；
+> 正式结论需以去标识化、经伦理审查和临床复核的真实队列为准。

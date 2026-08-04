@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>冠心病风险分层管理平台</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">
+    <span class="brand-mark">心</span>
+    <div>
+      <h1>冠心病风险分层管理平台</h1>
+      <p class="sub">基层医联体 · 评估 / 分层 / 随访闭环</p>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <span id="model-badge" class="model-badge">模型：加载中…</span>
+    <button class="btn btn-primary" id="btn-new-assess">＋ 新建评估</button>
+  </div>
+</header>
+
+<main class="layout">
+  <!-- 左侧：患者队列 -->
+  <aside class="sidebar">
+    <div class="sidebar-head">
+      <h2>患者队列</h2>
+      <input id="search" type="search" placeholder="搜索 ID / 年龄…" autocomplete="off">
+    </div>
+    <ul id="queue" class="queue"></ul>
+    <p class="sidebar-note">演示数据为本地研究队列示例（6 例）。<br>点击"新建评估"可录入新患者。</p>
+  </aside>
+
+  <!-- 右侧：详情 / 表单 -->
+  <section class="main">
+    <!-- 详情视图 -->
+    <div id="view-detail" class="view">
+      <div class="result-head">
+        <div>
+          <h2 id="detail-name">选择左侧患者查看评估结果</h2>
+          <p id="detail-sub" class="muted"></p>
+        </div>
+        <button class="btn" id="btn-print" onclick="window.print()">🖨 打印报告</button>
+      </div>
+      <div id="detail-body"></div>
+    </div>
+
+    <!-- 评估表单视图 -->
+    <div id="view-form" class="view hidden">
+      <div class="result-head">
+        <div>
+          <h2>新建风险评估</h2>
+          <p class="muted">填写患者信息，点击"开始评估"。可先"载入示例"。</p>
+        </div>
+        <button class="btn" id="btn-back">← 返回队列</button>
+      </div>
+      <form id="assess-form" class="form-grid">
+        <fieldset><legend>基本信息</legend>
+          <label>患者ID <input name="patient_id" placeholder="如 PAT-001"></label>
+          <label>年龄（岁）<input name="age" type="number" min="18" max="110" required></label>
+          <label>性别
+            <select name="sex"><option value="男">男</option><option value="女">女</option></select>
+          </label>
+          <label>BMI <input name="bmi" type="number" step="0.1" placeholder="kg/m²"></label>
+        </fieldset>
+        <fieldset><legend>生命体征</legend>
+          <label>收缩压 <input name="sbp" type="number" step="1" placeholder="mmHg"></label>
+          <label>舒张压 <input name="dbp" type="number" step="1" placeholder="mmHg"></label>
+          <label>6个月SBP趋势 <input name="sbp_trend_6m" type="number" step="0.1" placeholder="mmHg"></label>
+        </fieldset>
+        <fieldset><legend>检验（LIS）</legend>
+          <label>总胆固醇 <input name="total_chol" type="number" step="0.01" placeholder="mmol/L"></label>
+          <label>LDL-C <input name="ldl_c" type="number" step="0.01" placeholder="mmol/L"></label>
+          <label>HDL-C <input name="hdl_c" type="number" step="0.01" placeholder="mmol/L"></label>
+          <label>甘油三酯 <input name="triglyceride" type="number" step="0.01" placeholder="mmol/L"></label>
+          <label>空腹血糖 <input name="fasting_glucose" type="number" step="0.01" placeholder="mmol/L"></label>
+          <label>血糖 <input name="glucose" type="number" step="0.01" placeholder="mmol/L"></label>
+          <label>糖化血红蛋白 <input name="hba1c" type="number" step="0.01" placeholder="%"></label>
+          <label>肌酐 <input name="creatinine" type="number" step="1" placeholder="µmol/L"></label>
+          <label>尿酸 <input name="uric_acid" type="number" step="1" placeholder="µmol/L"></label>
+          <label>尿素氮 <input name="bun" type="number" step="0.1" placeholder="mmol/L"></label>
+        </fieldset>
+        <fieldset><legend>病史与危险因素</legend>
+          <label class="chk"><input name="smoker" type="checkbox"> 吸烟</label>
+          <label class="chk"><input name="diabetes" type="checkbox"> 糖尿病</label>
+          <label class="chk"><input name="hypertension" type="checkbox"> 高血压</label>
+          <label class="chk"><input name="ckd" type="checkbox"> 慢性肾病</label>
+          <label class="chk"><input name="atrial_fibrillation" type="checkbox"> 房颤</label>
+          <label class="chk"><input name="family_history_chd" type="checkbox"> 冠心病家族史</label>
+          <label class="chk"><input name="chest_pain_visit_last_year" type="checkbox"> 近1年胸痛就诊</label>
+          <label class="chk"><input name="ecg_abnormal" type="checkbox"> 心电图异常</label>
+          <label class="chk"><input name="carotid_ultrasound_abnormal" type="checkbox"> 颈动脉超声异常</label>
+        </fieldset>
+        <fieldset><legend>用药与随访</legend>
+          <label class="chk"><input name="antihypertensive_use" type="checkbox"> 降压药</label>
+          <label class="chk"><input name="lipid_lowering_use" type="checkbox"> 降脂药</label>
+          <label class="chk"><input name="antiplatelet_use" type="checkbox"> 抗血小板药</label>
+          <label class="chk"><input name="statin_adherence_gap" type="checkbox"> 他汀用药不连续</label>
+          <label class="chk"><input name="follow_up_interrupted" type="checkbox"> 随访中断</label>
+          <label>用药依从率 <input name="medication_adherence_rate" type="number" step="0.01" min="0" max="1" placeholder="0-1"></label>
+          <label>近12个月门诊次数 <input name="outpatient_visits_12m" type="number"></label>
+          <label>近12个月急诊次数 <input name="emergency_visits_12m" type="number"></label>
+        </fieldset>
+        <div class="form-actions">
+          <button type="button" class="btn" id="btn-load-sample">载入示例</button>
+          <button type="submit" class="btn btn-primary btn-lg">开始评估 →</button>
+        </div>
+      </form>
+    </div>
+  </section>
+</main>
+
+<div id="toast" class="toast hidden"></div>
+<script src="app.js"></script>
+</body>
+</html>

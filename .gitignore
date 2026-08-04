@@ -17,6 +17,8 @@ models/*.joblib
 models/*.pkl
 outputs/*
 !outputs/.gitkeep
+!outputs/figures/
+!outputs/figures/*
 
 # Patient-level files should stay outside git unless they are synthetic examples.
 *.xlsx
