@@ -68,12 +68,16 @@ def create_app():
         return assess_with_bundle(snapshot, bundle).to_dict()
 
     # Serve the doctor-friendly UI from ./ui when present.
+    import sys as _sys
     from pathlib import Path
 
     from fastapi.responses import RedirectResponse
     from fastapi.staticfiles import StaticFiles
 
-    ui_dir = Path(__file__).resolve().parents[2] / "ui"
+    if getattr(_sys, "frozen", False):  # PyInstaller bundle
+        ui_dir = Path(_sys._MEIPASS) / "ui"
+    else:
+        ui_dir = Path(__file__).resolve().parents[2] / "ui"
     if ui_dir.exists():
         app.mount("/ui", StaticFiles(directory=str(ui_dir), html=True), name="ui")
 

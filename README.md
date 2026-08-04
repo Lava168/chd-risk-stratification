@@ -102,6 +102,24 @@ python -m uvicorn chd_risk.api:app --host 127.0.0.1 --port 8765
 
 > 评估由 `models/trained_model_bundle.joblib` 中的训练模型完成（无模型时回退权重原型）。
 
+## 桌面版（Desktop App）
+
+打包为独立 macOS 应用（pywebview 原生窗口 + 内置 FastAPI 后端 + 训练模型），无需安装 Python 依赖。
+
+**macOS（Apple Silicon）下载**：`release/CHD-Risk-Stratification-macOS-arm64.zip`（解压后把
+`CHD Risk Stratification.app` 拖入"应用程序"即可；首次打开如提示"已损坏/无法验证"，在
+"系统设置 → 隐私与安全性"中允许，或运行 `xattr -cr /Applications/CHD Risk Stratification.app`）。
+
+**从源码重新构建**：
+
+```bash
+./scripts/build_desktop.sh
+# 产物：dist/CHD Risk Stratification.app 与 release/CHD-Risk-Stratification-macOS-arm64.zip
+```
+
+> 说明：PyInstaller 打包产物仅适用于构建它的操作系统/架构（当前为 macOS arm64）。
+> Windows 版需在 Windows 机器上运行 `scripts/build_desktop.sh` 重新构建。
+
 ## 快速运行
 
 ```bash
