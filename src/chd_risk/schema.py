@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass
 from typing import Any
 
@@ -10,7 +11,7 @@ FALSE_VALUES = {"0", "false", "f", "no", "n", "否", "无", "阴性"}
 def _is_missing(value: Any) -> bool:
     if value is None:
         return True
-    if isinstance(value, float) and value != value:  # NaN
+    if isinstance(value, float) and math.isnan(value):  # NaN
         return True
     if isinstance(value, str):
         text = value.strip().lower()
