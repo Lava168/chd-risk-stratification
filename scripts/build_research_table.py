@@ -26,6 +26,52 @@ SMOKE_DENY = re.compile(r"否认.*吸烟|无吸烟史|不吸烟|否认吸烟", r
 DIAGNOSIS_COLS = ["就诊诊断", "门（急）诊诊断", "入院诊断", "检查结论"]
 DATE_COLS = ["就诊日期", "出院日期", "检查日期", "报告日期"]
 
+# Lab values are only extracted from report/note text (NOT the orders column 处置,
+# which contains test-item numbers and advice text and produced false matches).
+LAB_SOURCES = ["辅助检查", "现病史"]
+LAB_CONFIG = {
+    "total_chol": {
+        "patterns": [re.compile(r"总胆固醇(?:胆固醇)?\D{0,8}(\d{1,3}(?:\.\d{1,2})?)", re.IGNORECASE)],
+        "low": 1.0, "high": 12.0, "label": "总胆固醇(mmol/L)",
+    },
+    "ldl_c": {
+        "patterns": [re.compile(r"低密度脂蛋白(?:胆固醇)?\D{0,8}(\d{1,3}(?:\.\d{1,2})?)", re.IGNORECASE)],
+        "low": 0.2, "high": 8.0, "label": "LDL-C(mmol/L)",
+    },
+    "hdl_c": {
+        "patterns": [re.compile(r"高密度脂蛋白(?:胆固醇)?\D{0,8}(\d{1,3}(?:\.\d{1,2})?)", re.IGNORECASE)],
+        "low": 0.2, "high": 4.0, "label": "HDL-C(mmol/L)",
+    },
+    "triglyceride": {
+        "patterns": [re.compile(r"甘油三酯\D{0,8}(\d{1,3}(?:\.\d{1,2})?)", re.IGNORECASE)],
+        "low": 0.2, "high": 12.0, "label": "甘油三酯(mmol/L)",
+    },
+    "fasting_glucose": {
+        "patterns": [re.compile(r"空腹血糖\D{0,8}(\d{1,3}(?:\.\d{1,2})?)", re.IGNORECASE)],
+        "low": 2.0, "high": 30.0, "label": "空腹血糖(mmol/L)",
+    },
+    "glucose": {
+        "patterns": [re.compile(r"(?:血糖|葡萄糖)\D{0,8}(\d{1,3}(?:\.\d{1,2})?)", re.IGNORECASE)],
+        "low": 2.0, "high": 30.0, "label": "血糖(mmol/L,随机)",
+    },
+    "hba1c": {
+        "patterns": [re.compile(r"(?:糖化血红蛋白|HbA1c)\D{0,8}(\d{1,2}(?:\.\d{1,2})?)", re.IGNORECASE)],
+        "low": 3.0, "high": 20.0, "label": "糖化血红蛋白(%)",
+    },
+    "creatinine": {
+        "patterns": [re.compile(r"肌酐(?:测定)?\D{0,8}(\d{1,4}(?:\.\d{1,2})?)", re.IGNORECASE)],
+        "low": 10.0, "high": 1200.0, "label": "肌酐(umol/L)",
+    },
+    "uric_acid": {
+        "patterns": [re.compile(r"尿酸(?:测定)?\D{0,8}(\d{1,4}(?:\.\d{1,2})?)", re.IGNORECASE)],
+        "low": 50.0, "high": 900.0, "label": "尿酸(umol/L)",
+    },
+    "bun": {
+        "patterns": [re.compile(r"尿素(?:氮)?\D{0,8}(\d{1,3}(?:\.\d{1,2})?)", re.IGNORECASE)],
+        "low": 1.0, "high": 35.0, "label": "尿素氮(mmol/L)",
+    },
+}
+
 
 def _contains(series: pd.Series, pattern: re.Pattern, deny: re.Pattern | None = None) -> pd.Series:
     text = series.dropna().astype(str)
@@ -113,6 +159,22 @@ def build_research_table(workbook: Path, sheet: str, output: Path) -> Path:
         chd_any_mask |= s.str.contains(CHD_ANY_PATTERN, regex=True, na=False).reindex(df.index, fill_value=False)
         severe_mask |= s.str.contains(SEVERE_CHD_PATTERN, regex=True, na=False).reindex(df.index, fill_value=False)
 
+    # ---- lab values from report/note text ----
+    for lab, cfg in LAB_CONFIG.items():
+        row_col = f"_{lab}_row"
+        df[row_col] = pd.NA
+        for source in LAB_SOURCES:
+            if source not in df.columns:
+                continue
+            text = df[source].dropna().astype(str)
+            values = pd.Series(pd.NA, index=df.index)
+            for pat in cfg["patterns"]:
+                extracted = text.str.extract(pat)
+                nums = pd.to_numeric(extracted[0], errors="coerce")
+                valid = nums.between(cfg["low"], cfg["high"])
+                values.loc[text.index[valid]] = nums[valid]
+            df[row_col] = df[row_col].combine_first(values)
+
     # ---- collapse to one row per patient ----
     groups = df.groupby("患者ID")
     table = pd.DataFrame(index=groups.size().index)
@@ -126,6 +188,10 @@ def build_research_table(workbook: Path, sheet: str, output: Path) -> Path:
     table["sbp"] = groups["sbp_row"].median()
     table["dbp"] = groups["dbp_row"].median()
     table["pulse_pressure"] = table["sbp"] - table["dbp"]
+    for lab in LAB_CONFIG:
+        table[lab] = groups[f"_{lab}_row"].apply(
+            lambda col: pd.to_numeric(col, errors="coerce").median()
+        )
     table["diabetes"] = groups["diabetes_row"].any().astype(int)
     table["hypertension"] = groups["hypertension_row"].any().astype(int)
     table["smoker"] = groups["smoker_row"].max()

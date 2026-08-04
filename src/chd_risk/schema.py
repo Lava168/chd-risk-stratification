@@ -70,7 +70,13 @@ class PatientSnapshot:
     total_chol: float | None = None
     ldl_c: float | None = None
     hdl_c: float | None = None
+    triglyceride: float | None = None
     fasting_glucose: float | None = None
+    glucose: float | None = None
+    hba1c: float | None = None
+    creatinine: float | None = None
+    uric_acid: float | None = None
+    bun: float | None = None
     smoker: bool | None = None
     diabetes: bool | None = None
     hypertension: bool | None = None
@@ -110,7 +116,13 @@ class PatientSnapshot:
             total_chol=parse_float(payload.get("total_chol")),
             ldl_c=parse_float(payload.get("ldl_c")),
             hdl_c=parse_float(payload.get("hdl_c")),
+            triglyceride=parse_float(payload.get("triglyceride")),
             fasting_glucose=parse_float(payload.get("fasting_glucose")),
+            glucose=parse_float(payload.get("glucose")),
+            hba1c=parse_float(payload.get("hba1c")),
+            creatinine=parse_float(payload.get("creatinine")),
+            uric_acid=parse_float(payload.get("uric_acid")),
+            bun=parse_float(payload.get("bun")),
             smoker=parse_bool(payload.get("smoker")),
             diabetes=parse_bool(payload.get("diabetes")),
             hypertension=parse_bool(payload.get("hypertension")),

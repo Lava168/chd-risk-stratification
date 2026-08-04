@@ -9,7 +9,8 @@ from .schema import PatientSnapshot
 
 FIELDNAMES = [
     "patient_id", "age", "sex", "bmi", "sbp", "dbp", "total_chol", "ldl_c",
-    "hdl_c", "fasting_glucose", "smoker", "diabetes", "hypertension", "ckd",
+    "hdl_c", "triglyceride", "fasting_glucose", "glucose", "hba1c",
+    "creatinine", "uric_acid", "bun", "smoker", "diabetes", "hypertension", "ckd",
     "atrial_fibrillation", "family_history_chd", "chest_pain_visit_last_year",
     "ecg_abnormal", "carotid_ultrasound_abnormal", "antihypertensive_use",
     "lipid_lowering_use", "antiplatelet_use", "statin_adherence_gap",
@@ -41,7 +42,13 @@ def generate_synthetic_records(n: int = 200, seed: int = 42) -> list[dict]:
             "total_chol": round(random.gauss(4.8, 0.9), 2),
             "ldl_c": round(random.gauss(2.7 + (0.2 if diabetes else 0), 0.65), 2),
             "hdl_c": round(min(max(random.gauss(1.18 if male else 1.34, 0.24), 0.4), 3.0), 2),
+            "triglyceride": round(min(max(random.gauss(1.6 + (0.3 if diabetes else 0), 0.7), 0.4), 8.0), 2),
             "fasting_glucose": round(random.gauss(6.4 if diabetes else 5.3, 0.8), 2),
+            "glucose": round(random.gauss(7.0 if diabetes else 5.6, 1.2), 2),
+            "hba1c": round(random.gauss(7.0 if diabetes else 5.6, 0.9), 2),
+            "creatinine": round(random.gauss(75, 18), 1),
+            "uric_acid": round(random.gauss(320, 70), 1),
+            "bun": round(random.gauss(5.8, 1.6), 2),
             "smoker": _yes_no(0.30 if male else 0.08),
             "diabetes": diabetes,
             "hypertension": hypertension,

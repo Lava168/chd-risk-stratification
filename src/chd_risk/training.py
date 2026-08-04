@@ -34,7 +34,13 @@ RAW_FEATURES = [
     "total_chol",
     "ldl_c",
     "hdl_c",
+    "triglyceride",
     "fasting_glucose",
+    "glucose",
+    "hba1c",
+    "creatinine",
+    "uric_acid",
+    "bun",
     "smoker",
     "diabetes",
     "hypertension",
@@ -114,6 +120,24 @@ def _derive_feature_frame(pd, records: list[dict], raw_features: list[str]) -> A
             continue
         rows.append(build_feature_vector(snapshot))
     return pd.DataFrame(rows)
+
+
+def _optimal_threshold(y_true, probabilities, low=0.02, high=0.98, steps=97):
+    """Pick the probability threshold maximizing Youden's J on the TRAIN set."""
+    best_t, best_j = 0.5, -1.0
+    for step in range(steps):
+        threshold = low + (high - low) * step / (steps - 1)
+        predicted = [1 if p >= threshold else 0 for p in probabilities]
+        tp = sum(1 for y, p in zip(y_true, predicted) if y == 1 and p == 1)
+        tn = sum(1 for y, p in zip(y_true, predicted) if y == 0 and p == 0)
+        fp = sum(1 for y, p in zip(y_true, predicted) if y == 0 and p == 1)
+        fn = sum(1 for y, p in zip(y_true, predicted) if y == 1 and p == 0)
+        sensitivity = tp / (tp + fn) if tp + fn else 0.0
+        specificity = tn / (tn + fp) if tn + fp else 0.0
+        youden = sensitivity + specificity - 1.0
+        if youden > best_j:
+            best_j, best_t = youden, threshold
+    return round(best_t, 3)
 
 
 def _binary_metrics(y_true: list[int], probabilities: list[float], threshold: float) -> dict[str, float]:
@@ -292,20 +316,61 @@ def train_tabular_models(
             report["models"][name] = {"error": f"{type(exc).__name__}: {exc}"}
             continue
         probabilities = model.predict_proba(X_test_t)[:, 1]
+        train_proba = model.predict_proba(X_train_t)[:, 1]
+        # Classification optimization: threshold chosen on TRAIN by Youden's J.
+        best_threshold = (
+            _optimal_threshold(y_train, train_proba)
+            if len(set(y_train)) > 1 else threshold
+        )
         metrics: dict[str, Any] = {
             "auc": float(ml["roc_auc_score"](y_test, probabilities))
             if len(set(y_test)) > 1 else None,
             "brier_score": float(ml["brier_score_loss"](y_test, probabilities)),
             "n_train": len(X_train_t),
             "n_test": len(X_test_t),
+            "optimal_threshold": best_threshold,
         }
-        metrics.update(_binary_metrics(y_test, probabilities, threshold=threshold))
+        metrics.update(_binary_metrics(y_test, probabilities, threshold=best_threshold))
         report["models"][name] = metrics
 
     if fitted and len(set(y_test)) > 1:
         report["calibration"] = {
             name: _calibration_table(y_test, fitted[name].predict_proba(X_test_t)[:, 1])
             for name in fitted
+        }
+
+    # Probability calibration (Platt/sigmoid) for the best-AUC model on train;
+    # fit on TRAIN only, evaluated on TEST, so there is no leakage.
+    try:
+        from sklearn.calibration import CalibratedClassifierCV
+
+        best_name = max(
+            fitted,
+            key=lambda name: (
+                report["models"][name].get("auc", 0.0)
+                if report["models"][name].get("auc") is not None else 0.0
+            ),
+        )
+        cal_model = CalibratedClassifierCV(
+            fitted[best_name], method="sigmoid", cv=3
+        ).fit(X_train_t, y_train)
+        cal_proba = cal_model.predict_proba(X_test_t)[:, 1]
+        report["calibration_evaluation"] = {
+            "model": best_name,
+            "auc_raw": report["models"][best_name]["auc"],
+            "brier_raw": report["models"][best_name]["brier_score"],
+            "brier_calibrated": round(
+                float(ml["brier_score_loss"](y_test, cal_proba)), 4
+            ),
+            "auc_calibrated": round(
+                float(ml["roc_auc_score"](y_test, cal_proba)), 4
+            )
+            if len(set(y_test)) > 1 else None,
+            "note": "Platt sigmoid calibration fit on train only, evaluated on test.",
+        }
+    except Exception as exc:  # noqa: BLE001 - calibration may fail on tiny folds
+        report["calibration_evaluation"] = {
+            "error": f"{type(exc).__name__}: {exc}"
         }
 
     # SHAP explanation on the first fitted tree model (interpretability demo).
