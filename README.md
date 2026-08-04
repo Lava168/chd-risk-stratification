@@ -162,6 +162,25 @@ python3 scripts/stage_b_local_data_feasibility.py \
 
 本次本地 Excel 摸底结论见 `docs/stage_b_local_data_feasibility.md`。数据科导出一人一行研究宽表时，可参考 `data/stage_b_research_table_schema.csv`。
 
+## 公共数据集验证
+
+在 4 个公开心血管数据集上跑同一套「训练 → 评估 → 校准 → SHAP → 报告」流水线，验证流程可复现（不依赖任何本地私有数据）。完整报告见 `docs/stage_public_datasets_validation.md`。
+
+| 数据集 | 样本 | 阳性率 | 最优模型 | 测试集 AUC |
+|---|---:|---:|---|---:|
+| UCI Heart Disease (Cleveland) | 303 | 45.9% | random_forest | 0.958 |
+| UCI Statlog (Heart) | 270 | 44.4% | logistic_regression | 0.896 |
+| UCI Heart Disease (Hungarian) | 294 | 36.0% | random_forest | 0.886 |
+| ESL South African Heart Disease (SAheart) | 462 | 34.6% | logistic_regression | 0.821 |
+
+数据文件位于 `data/public/`（`uci_cleveland.data`、`statlog_heart.dat`、`hungarian_heart.data`、`SAheart.data`）。复现命令：
+
+```bash
+python scripts/stage_public_multi_validation.py --output-dir outputs/stage_public
+```
+
+> ⚠️ 这些是流水线复现性/基准检查，不是临床验证；各库人群、特征与结局定义不同，跨库 AUC 不能横向比较「临床水平」。
+
 ## 当前实现边界
 
 - `src/chd_risk/china_par.py` 是 China-PAR 适配边界。因申报书没有提供正式系数，仓库只放了开发用 proxy，不能当成真实 China-PAR 公式。
@@ -181,6 +200,7 @@ python3 scripts/stage_b_local_data_feasibility.py \
 
 - ✅ **评分链路已接入训练模型**：`train-tabular` 默认把最优模型保存为 `models/trained_model_bundle.joblib`；`score-one`/`score-csv`/API 自动加载它（无模型时回退到权重原型）。分层阈值按训练人群分数分位数标定（相对风险带），缺失值不进入"风险原因"。
 - ✅ Stage A：UCI 公开数据验证（`scripts/stage_a_uci_validation.py`，Cleveland 303 例，4 模型 CV AUC ~0.91，证明训练-评估-报告流水线可复现），见 `docs/stage_a_uci_validation.md`。
+- ✅ 公共数据集多库验证（`scripts/stage_public_multi_validation.py`，Cleveland 303 / Statlog 270 / Hungarian 294 / SAheart 462 例，4 模型 AUC 0.82-0.96），见 `docs/stage_public_datasets_validation.md`。
 - ✅ 本地 Stage B 可行性审计（`scripts/stage_b_local_data_feasibility.py`，输出聚合统计，不导出患者级数据）。
 - ✅ 本地研究宽表构建 ETL（`scripts/build_research_table.py` → `data/processed/research_table_local.csv`，提取规则见 `docs/research_table_extraction.md`）。
 - ✅ 多模型训练与验证报告（Logistic / 随机森林 / XGBoost / LightGBM，随机划分 + 时间外划分，AUC/Brier/灵敏度/特异度/F1/校准分箱/SHAP 解释），见 `docs/stage_c_local_model_exploration.md`。
