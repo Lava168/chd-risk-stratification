@@ -32,11 +32,35 @@ jobs:
       - name: Build with PyInstaller
         run: python -m PyInstaller --noconfirm --clean chd_risk_desktop.spec
 
+      - name: Package installer (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          ditto -c -k --sequesterRsrc --keepParent "dist/CHD Risk Stratification.app" \
+            "dist/CHD-Risk-Stratification-macOS-arm64.zip"
+          ls -lh dist/
+
+      - name: Package installer (Windows)
+        if: runner.os == 'Windows'
+        shell: powershell
+        run: |
+          Compress-Archive -Path "dist\CHD Risk Stratification" -DestinationPath "dist\CHD-Risk-Stratification-Windows.zip" -Force
+          Get-ChildItem dist | Select-Object Name, Length
+
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: chd-risk-desktop-${{ runner.os }}
           path: |
+            dist/*.zip
             dist/CHD Risk Stratification.app
             dist/CHD Risk Stratification
           if-no-files-found: warn
+
+      - name: Publish GitHub Release (tag pushes only)
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*.zip
+          generate_release_notes: true
+          draft: false
+          prerelease: false

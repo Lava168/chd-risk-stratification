@@ -47,9 +47,17 @@ XGB_DIR = Path(xgboost.__file__).resolve().parent
 binaries = []
 if sys.platform == "darwin":
     xgb_lib = XGB_DIR / "lib" / "libxgboost.dylib"
-    libomp = Path(".venv/lib/libomp/libomp.dylib")
-    if libomp.exists():
-        binaries.append((str(libomp), "libomp"))
+    # Bundle libomp wherever it is available (local venv, or Homebrew on CI).
+    for libomp_candidate in (
+        Path(".venv/lib/libomp/libomp.dylib"),
+        Path("/opt/homebrew/opt/libomp/lib/libomp.dylib"),
+        Path("/opt/homebrew/lib/libomp.dylib"),
+        Path("/usr/local/opt/libomp/lib/libomp.dylib"),
+        Path("/usr/local/lib/libomp.dylib"),
+    ):
+        if libomp_candidate.exists():
+            binaries.append((str(libomp_candidate), "libomp"))
+            break
 elif sys.platform == "win32":
     xgb_lib = XGB_DIR / "lib" / "xgboost.dll"
 else:  # linux

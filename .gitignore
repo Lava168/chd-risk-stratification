@@ -15,6 +15,7 @@ data/raw/
 data/processed/
 models/*.joblib
 models/*.pkl
+!models/trained_model_bundle.joblib
 outputs/*
 !outputs/.gitkeep
 !outputs/figures/
