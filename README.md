@@ -99,6 +99,10 @@ flowchart LR
   H --> D
 ```
 
+## 📊 项目结果汇总
+
+全部模型验证结果、最优/部署模型与复现命令见 **[docs/results_summary.md](docs/results_summary.md)**（最优部署模型：本地 XGBoost，CV AUC 0.871、时间外 AUC 0.835）。
+
 ## 模型能做什么
 
 输入一份患者档案（年龄、性别、血压血脂血糖、吸烟、共病、用药依从性、就诊频次等 **22 个特征**），
