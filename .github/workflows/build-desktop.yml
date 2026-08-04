@@ -1,0 +1,42 @@
+name: Build Desktop App
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install libomp (macOS, for xgboost)
+        if: runner.os == 'macOS'
+        run: brew install libomp
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[ml,api]" pywebview pyinstaller
+
+      - name: Build with PyInstaller
+        run: python -m PyInstaller --noconfirm --clean chd_risk_desktop.spec
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: chd-risk-desktop-${{ runner.os }}
+          path: |
+            dist/CHD Risk Stratification.app
+            dist/CHD Risk Stratification
+          if-no-files-found: warn

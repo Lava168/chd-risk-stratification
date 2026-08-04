@@ -117,8 +117,20 @@ python -m uvicorn chd_risk.api:app --host 127.0.0.1 --port 8765
 # 产物：dist/CHD Risk Stratification.app 与 release/CHD-Risk-Stratification-macOS-arm64.zip
 ```
 
-> 说明：PyInstaller 打包产物仅适用于构建它的操作系统/架构（当前为 macOS arm64）。
-> Windows 版需在 Windows 机器上运行 `scripts/build_desktop.sh` 重新构建。
+**Windows 版**：PyInstaller 无法跨平台编译，Windows 的 `.exe` 需在 Windows 上构建，两种方式任选：
+
+1. **GitHub Actions 自动构建（推荐）**：推送到仓库后，在 **Actions → Build Desktop App → Run workflow**（或打 `v*` 标签），
+   会自动在 Windows / macOS 云服务器上构建并产出可下载的构建产物（artifacts）。
+2. **本机构建**：在 Windows 机器上运行：
+
+   ```bat
+   scripts\build_desktop.bat
+   ```
+
+   > 说明：模型 bundle（`models/trained_model_bundle.joblib`）因包含本地去标识化数据产物而**不进入 Git**，
+   > 因此 CI/他人构建的应用默认使用"权重原型"演示模式；如需打包训练模型，请把该文件放回 `models/` 再构建。
+
+> macOS 安装包：`release/CHD-Risk-Stratification-macOS-arm64.zip`（Apple Silicon）。
 
 ## 快速运行
 
