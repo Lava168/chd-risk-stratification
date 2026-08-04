@@ -21,6 +21,18 @@ import seaborn as sns
 
 sns.set_theme(style="whitegrid", palette="deep")
 
+# Nature-skill style (Yuan1z0825/nature-skills): Arial sans-serif, outward ticks,
+# no top/right spines
+plt.rcParams.update({
+    "font.family": "sans-serif",
+    "font.sans-serif": ["Arial", "Helvetica", "DejaVu Sans"],
+    "axes.linewidth": 0.8,
+    "axes.spines.top": False,
+    "axes.spines.right": False,
+    "xtick.direction": "out",
+    "ytick.direction": "out",
+})
+
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
 from stage_c3_strongest_model import (
     FEATURES,
@@ -44,12 +56,13 @@ MODEL_LABELS = {
     "lightgbm": "LightGBM",
     "ensemble": "Ensemble",
 }
+# Nature-skill DEFAULT_COLORS
 COLORS = {
-    "logistic_regression": "#4C72B0",
-    "random_forest": "#55A868",
-    "xgboost": "#C44E52",
-    "lightgbm": "#8172B2",
-    "ensemble": "#CCB974",
+    "logistic_regression": "#0F4D92",
+    "random_forest": "#8BCF8B",
+    "xgboost": "#B64342",
+    "lightgbm": "#42949E",
+    "ensemble": "#9A4D8E",
 }
 FEATURE_EN = {
     "age": "Age", "male": "Male", "sbp": "SBP", "pulse_pressure": "Pulse pressure",
@@ -61,7 +74,7 @@ FEATURE_EN = {
     "has_any_lab": "Any lab done", "smoker": "Smoker", "diabetes": "Diabetes",
     "hypertension": "Hypertension", "ecg_abnormal": "Abnormal ECG",
 }
-TIER_EN = {"低危": "Low", "中危": "Medium", "高危": "High", "极高危": "Very high"}
+TIER_EN = {"low": "Low", "medium": "Medium", "high": "High", "very_high": "Very high"}
 
 
 def _load_data():
@@ -211,8 +224,12 @@ def fig5_tiers(df):
     fig, axes = plt.subplots(1, 2, figsize=(13, 4.8))
     order = ["Low", "Medium", "High", "Very high"]
     counts = scored["tier"].value_counts().reindex(order).fillna(0).astype(int)
-    colors = ["#55A868", "#4C72B0", "#C44E52", "#8C1D18"]
+    # Nature-skill risk gradient: green -> teal -> red -> violet
+    colors = ["#8BCF8B", "#42949E", "#B64342", "#9A4D8E"]
     bars = axes[0].bar(order, counts.values, color=colors)
+    if counts["Very high"] == 0:
+        axes[0].text(3, max(counts.max(), 1) * 0.6, "n = 0 in this sample",
+                     ha="center", fontsize=9, color="#666666")
     axes[0].set_title("Risk tier distribution (strongest model)", fontsize=12)
     axes[0].set_ylabel("Patients")
     for bar, v in zip(bars, counts.values):
@@ -224,6 +241,9 @@ def fig5_tiers(df):
     axes[1].set_title("Observed hospitalization rate by tier", fontsize=12)
     axes[1].set_ylabel("Observed rate (%)"); axes[1].set_ylim(0, 110)
     axes[1].legend(fontsize=9)
+    if counts["Very high"] == 0:
+        axes[1].text(3, 92, "no patients in this tier", ha="center",
+                     fontsize=9, color="#666666")
     for bar, v in zip(bars2, rates.values):
         if np.isfinite(v):
             axes[1].text(bar.get_x() + bar.get_width() / 2, bar.get_height() + 2, f"{v:.0%}", ha="center")
