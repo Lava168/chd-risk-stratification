@@ -19,6 +19,16 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 
+plt.rcParams.update({
+    "font.family": "sans-serif",
+    "font.sans-serif": ["Arial", "Helvetica", "DejaVu Sans"],
+    "axes.linewidth": 0.8,
+    "axes.spines.top": False,
+    "axes.spines.right": False,
+    "xtick.direction": "out",
+    "ytick.direction": "out",
+})
+
 ROOT = Path(__file__).resolve().parent.parent
 SUMMARIES = sorted((ROOT / "outputs" / "stage_public").glob("*_summary.json"))
 OUT = ROOT / "outputs" / "figures"
@@ -30,7 +40,10 @@ MODEL_SHORT = {
     "xgboost": "XGBoost",
     "lightgbm": "LightGBM",
 }
-PALETTE = ["#1f6feb", "#2ea043", "#bf8700", "#8957e5"]
+# Nature-skill palette (Yuan1z0825/nature-skills, nature-figure DEFAULT_COLORS):
+# blue_main #0F4D92, green_3 #8BCF8B, red_strong #B64342, teal #42949E,
+# violet #9A4D8E, neutral_light #CFCECE
+PALETTE = ["#0F4D92", "#8BCF8B", "#B64342", "#42949E", "#9A4D8E", "#CFCECE"]
 
 
 def load_reports() -> dict[str, dict]:
@@ -48,7 +61,7 @@ def fig7_overview(reports: dict[str, dict]) -> None:
     event_rate = [r["event_rate"] * 100 for r in reports.values()]
 
     fig, axes = plt.subplots(1, 2, figsize=(11, 4.2))
-    bars = axes[0].bar(short, n_rows, color=PALETTE[0], alpha=0.9)
+    bars = axes[0].bar(short, n_rows, color=PALETTE[0], alpha=0.95)
     for b, v in zip(bars, n_rows):
         axes[0].text(b.get_x() + b.get_width() / 2, v + 4, str(v),
                      ha="center", fontsize=10)
@@ -56,7 +69,7 @@ def fig7_overview(reports: dict[str, dict]) -> None:
     axes[0].set_ylabel("Subjects (n)")
     axes[0].set_ylim(0, max(n_rows) * 1.18)
 
-    bars = axes[1].bar(short, event_rate, color=PALETTE[3], alpha=0.9)
+    bars = axes[1].bar(short, event_rate, color=PALETTE[4], alpha=0.95)
     for b, v in zip(bars, event_rate):
         axes[1].text(b.get_x() + b.get_width() / 2, v + 1.5, f"{v:.1f}%",
                      ha="center", fontsize=10)
@@ -91,7 +104,7 @@ def fig8_auc_compare(reports: dict[str, dict]) -> None:
             for d in datasets
         ]
         bars = ax.bar(x + (i - 1.5) * width, aucs, width, label=MODEL_SHORT[model],
-                      color=PALETTE[i], alpha=0.92)
+                      color=PALETTE[i], alpha=0.95)
         for b, v in zip(bars, aucs):
             if not np.isnan(v):
                 ax.text(b.get_x() + b.get_width() / 2, v + 0.008, f"{v:.3f}",
