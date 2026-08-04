@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from .assessment import assess_patient
+from .assessment import assess_patient, assess_with_bundle
+from .model_registry import load_bundle
 from .schema import PatientSnapshot
 
 try:
@@ -61,7 +62,10 @@ def create_app():
             snapshot = PatientSnapshot.from_mapping(payload.model_dump())
         except ValueError as exc:
             raise HTTPException(status_code=422, detail=str(exc)) from exc
-        return assess_patient(snapshot).to_dict()
+        bundle = load_bundle()
+        if bundle is None:
+            return assess_patient(snapshot).to_dict()
+        return assess_with_bundle(snapshot, bundle).to_dict()
 
     return app
 

@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from .china_par import BaselineEstimate, china_par_proxy, normalize_china_par_score
-from .config import ManagementPlan
+from .config import DEFAULT_THRESHOLDS, ManagementPlan
 from .features import FEATURE_LABELS, build_feature_vector
 from .model import WeightedRiskModel
 from .risk import classify_risk, management_plan, tier_label
@@ -29,6 +29,7 @@ class RiskAssessment:
     tier_label: str
     reasons: tuple[RiskReason, ...]
     plan: ManagementPlan
+    model_source: str = "weighted_prototype"
 
     def to_dict(self) -> dict:
         return {
@@ -54,6 +55,7 @@ class RiskAssessment:
                 "actions": list(self.plan.actions),
                 "referral": self.plan.referral,
             },
+            "model_source": self.model_source,
         }
 
 
@@ -99,5 +101,50 @@ def assess_patient(
         tier_label=tier_label(tier),
         reasons=reasons,
         plan=management_plan(tier),
+        model_source="weighted_prototype",
+    )
+
+
+def assess_with_bundle(
+    snapshot: PatientSnapshot,
+    bundle,
+    blend_baseline_weight: float = 0.30,
+) -> RiskAssessment:
+    """Score with a persisted trained-model bundle; falls back to prototype logic.
+
+    The bundle's probability is blended with the China-PAR-style baseline the same
+    way the prototype does, so tier semantics stay consistent across model sources.
+    """
+    local_probability = bundle.predict_proba(snapshot)
+    baseline = _baseline_estimate(snapshot)
+    blend_baseline_weight = min(max(blend_baseline_weight, 0.0), 1.0)
+    probability = (
+        (1.0 - blend_baseline_weight) * local_probability
+        + blend_baseline_weight * baseline.probability
+    )
+    from .config import RiskThresholds
+
+    thresholds = (
+        RiskThresholds(*bundle.tier_thresholds)
+        if bundle.tier_thresholds is not None else DEFAULT_THRESHOLDS
+    )
+    tier = classify_risk(probability, thresholds=thresholds)
+    contributors = bundle.top_contributors(snapshot)
+    reasons = tuple(
+        RiskReason(feature=name, label=FEATURE_LABELS.get(name, name), contribution=value)
+        for name, value in contributors
+    )
+    return RiskAssessment(
+        patient_id=snapshot.patient_id,
+        probability=probability,
+        local_model_probability=local_probability,
+        baseline_probability=baseline.probability,
+        baseline_source=baseline.source,
+        baseline_note=baseline.note,
+        tier=tier,
+        tier_label=tier_label(tier),
+        reasons=reasons,
+        plan=management_plan(tier),
+        model_source=bundle.describe(),
     )
 

@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Any
 
 from .features import FEATURE_LABELS, build_feature_vector
+from .model_registry import TrainedModelBundle
 from .schema import PatientSnapshot
 
 
@@ -189,12 +190,17 @@ def train_tabular_models(
     split: str = "random",
     threshold: float = 0.10,
     date_col: str = "index_date",
+    save_model: str | None = "models/trained_model_bundle.joblib",
 ) -> dict[str, Any]:
     """Train baseline sklearn models for research comparison.
 
     Random split is used by default; pass split="temporal" (sorts by date_col,
     default index_date) for a time-external-style validation split. Features are
     derived from raw research-table columns with the same rules as scoring.
+
+    When save_model is set, the best-AUC model on the test split is persisted as
+    a TrainedModelBundle (preprocessor + model + feature list + metadata) that the
+    scoring chain (score-one/score-csv/API) loads and uses.
     """
 
     ml = _require_ml()
@@ -402,6 +408,49 @@ def train_tabular_models(
             }
         except Exception as exc:  # noqa: BLE001
             report["shap_top_features"] = {"error": f"{type(exc).__name__}: {exc}"}
+
+    if save_model and fitted:
+        best_name = max(
+            fitted,
+            key=lambda name: (
+                report["models"][name].get("auc", 0.0)
+                if report["models"][name].get("auc") is not None else 0.0
+            ),
+        )
+        # Tier cutpoints for the trained model: relative risk bands = training-score
+        # quartiles (p25/p50/p75). The 5/10/20% absolute thresholds are designed for
+        # rare-event CHD risk and do not fit high-prevalence outcomes like
+        # hospitalization (63% here), where scores never reach a <5% band.
+        tier_thresholds = None
+        tier_method = "score_quantiles"
+        try:
+            train_scores = fitted[best_name].predict_proba(X_train_t)[:, 1]
+            cutpoints = np.percentile(train_scores, [25.0, 50.0, 75.0])
+            tier_thresholds = [round(float(value), 4) for value in cutpoints]
+        except Exception:  # noqa: BLE001 - guard pathological fits
+            tier_thresholds = None
+        bundle = TrainedModelBundle(
+            preprocessor=preprocessor,
+            model=fitted[best_name],
+            feature_names=feature_names,
+            model_name=best_name,
+            metadata={
+                "outcome_col": outcome_col,
+                "data_provenance": "synthetic-demo" if is_synthetic else "research-table",
+                "n_train": len(X_train_t),
+                "n_test": len(X_test_t),
+                "test_auc": report["models"][best_name].get("auc"),
+                "input": str(csv_path),
+                "tier_thresholds": tier_thresholds,
+                "tier_method": tier_method,
+            },
+        )
+        bundle_path = bundle.save(save_model)
+        report["saved_model"] = {
+            "path": str(bundle_path),
+            "model_name": best_name,
+            "description": bundle.describe(),
+        }
 
     output_report = Path(output_report)
     output_report.parent.mkdir(parents=True, exist_ok=True)

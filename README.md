@@ -74,6 +74,10 @@ python3 scripts/stage_b_local_data_feasibility.py --workbook /path/to/local.xlsx
 chd-risk train-tabular data/deidentified_research_table.csv --outcome-col outcome_chd
 # 时间外验证式划分（按 index_date 排序，前 85% 训练 / 后 15% 测试）：
 chd-risk train-tabular data/deidentified_research_table.csv --outcome-col outcome_chd --split temporal --date-col index_date
+
+# 训练后评分自动使用保存的模型 bundle（无模型时回退权重原型）：
+chd-risk score-one examples/sample_patient.json
+chd-risk score-csv data/processed/research_table_local.csv --output outputs/scored_patients.csv
 ```
 
 ## Stage B 本地数据可行性评估
@@ -106,6 +110,7 @@ python3 scripts/stage_b_local_data_feasibility.py \
 
 已完成：
 
+- ✅ **评分链路已接入训练模型**：`train-tabular` 默认把最优模型保存为 `models/trained_model_bundle.joblib`；`score-one`/`score-csv`/API 自动加载它（无模型时回退到权重原型）。分层阈值按训练人群分数分位数标定（相对风险带），缺失值不进入"风险原因"。
 - ✅ Stage A：UCI 公开数据验证（`scripts/stage_a_uci_validation.py`，Cleveland 303 例，4 模型 CV AUC ~0.91，证明训练-评估-报告流水线可复现），见 `docs/stage_a_uci_validation.md`。
 - ✅ 本地 Stage B 可行性审计（`scripts/stage_b_local_data_feasibility.py`，输出聚合统计，不导出患者级数据）。
 - ✅ 本地研究宽表构建 ETL（`scripts/build_research_table.py` → `data/processed/research_table_local.csv`，提取规则见 `docs/research_table_extraction.md`）。
