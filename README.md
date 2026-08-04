@@ -176,6 +176,20 @@ python3 scripts/stage_b_local_data_feasibility.py \
 | UCI Heart Disease (Hungarian) | 294 | 36.0% | random_forest | 0.886 |
 | ESL South African Heart Disease (SAheart) | 462 | 34.6% | logistic_regression | 0.821 |
 
+图表：
+
+![fig7 数据集概况](outputs/figures/fig7_public_overview.png)
+
+*图7：各数据集样本量与阳性事件率*
+
+![fig8 模型 AUC 对比](outputs/figures/fig8_public_auc_compare.png)
+
+*图8：4 个数据集 × 4 个模型的测试集 AUC*
+
+![fig9 ROC 曲线](outputs/figures/fig9_public_roc.png)
+
+*图9：各数据集 ROC 曲线（Logistic 或最优模型）*
+
 数据文件位于 `data/public/`（`uci_cleveland.data`、`statlog_heart.dat`、`hungarian_heart.data`、`SAheart.data`）。复现命令：
 
 ```bash

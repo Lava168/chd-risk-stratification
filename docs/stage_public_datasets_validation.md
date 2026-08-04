@@ -12,6 +12,20 @@
 | UCI Heart Disease (Hungarian) | 294 | 106 | 36.0% | 13 | 结局：冠脉造影 >50% 狭窄（num>0）；缺失值较多 |
 | ESL South African Heart Disease (SAheart) | 462 | 160 | 34.6% | 9 | 结局：chd（冠心病事件 0/1） |
 
+## 图表
+
+![fig7 数据集概况](outputs/figures/fig7_public_overview.png)
+
+*图7：各数据集样本量与阳性事件率*
+
+![fig8 模型 AUC 对比](outputs/figures/fig8_public_auc_compare.png)
+
+*图8：4 个数据集 × 4 个模型的测试集 AUC*
+
+![fig9 ROC 曲线](outputs/figures/fig9_public_roc.png)
+
+*图9：各数据集 ROC 曲线（Logistic 或最优模型）*
+
 ## 各数据集模型结果（80/20 分层随机划分）
 
 ### UCI Heart Disease (Cleveland)

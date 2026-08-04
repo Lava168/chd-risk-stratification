@@ -24,7 +24,7 @@ from sklearn.compose import ColumnTransformer
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.impute import SimpleImputer
 from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import brier_score_loss, roc_auc_score
+from sklearn.metrics import brier_score_loss, roc_auc_score, roc_curve
 from sklearn.model_selection import StratifiedKFold, train_test_split
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
@@ -285,6 +285,12 @@ def run_validation(name: str, seed: int = 42) -> dict:
             "n_train": len(X_train_t),
             "n_test": len(X_test_t),
         }
+        fpr, tpr, _ = roc_curve(y_test, proba)
+        roc_idx = np.linspace(0, len(fpr) - 1, 100).astype(int)
+        metrics["roc"] = {
+            "fpr": [round(float(x), 4) for x in fpr[roc_idx]],
+            "tpr": [round(float(x), 4) for x in tpr[roc_idx]],
+        }
         metrics.update(_binary_metrics(y_test.to_numpy(), proba))
         report["models"][model_name] = metrics
 
@@ -316,7 +322,25 @@ def write_markdown(reports: dict[str, dict]) -> Path:
             f"| {r['dataset']} | {r['n_rows']} | {r['n_events']} | "
             f"{r['event_rate']:.1%} | {len(r['features'])} | {r['note']} |"
         )
-    lines += ["", "## 各数据集模型结果（80/20 分层随机划分）", ""]
+    lines += [
+        "",
+        "## 图表",
+        "",
+        "![fig7 数据集概况](outputs/figures/fig7_public_overview.png)",
+        "",
+        "*图7：各数据集样本量与阳性事件率*",
+        "",
+        "![fig8 模型 AUC 对比](outputs/figures/fig8_public_auc_compare.png)",
+        "",
+        "*图8：4 个数据集 × 4 个模型的测试集 AUC*",
+        "",
+        "![fig9 ROC 曲线](outputs/figures/fig9_public_roc.png)",
+        "",
+        "*图9：各数据集 ROC 曲线（Logistic 或最优模型）*",
+        "",
+        "## 各数据集模型结果（80/20 分层随机划分）",
+        "",
+    ]
     best_rows = []
     for name in DATASETS:
         r = reports[name]
