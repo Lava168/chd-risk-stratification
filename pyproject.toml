@@ -7,7 +7,7 @@ name = "chd-risk-stratification"
 version = "0.1.0"
 description = "Prototype toolkit for community CHD risk stratification and closed-loop management."
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.9"
 license = { text = "MIT" }
 authors = [
   { name = "Luodian CHD Risk Project" }

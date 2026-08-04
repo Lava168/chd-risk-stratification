@@ -1,8 +1,7 @@
 from __future__ import annotations
 
 from collections import Counter
-from typing import Iterable
-
+from collections.abc import Iterable
 
 CORE_FIELDS = ("patient_id", "age", "sex", "sbp", "ldl_c", "diabetes")
 

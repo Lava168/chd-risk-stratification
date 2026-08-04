@@ -35,6 +35,8 @@
 ```bash
 PYTHONPATH=src python3 -m chd_risk.cli score-one examples/sample_patient.json
 PYTHONPATH=src python3 -m chd_risk.cli generate-synthetic --n 200 --output data/synthetic_patients.csv
+PYTHONPATH=src python3 -m chd_risk.cli quality-report data/synthetic_patients.csv --output outputs/quality_report.json
+PYTHONPATH=src python3 -m chd_risk.cli train-tabular data/synthetic_patients.csv --output-report outputs/training_report.json
 PYTHONPATH=src python3 -m chd_risk.cli score-csv data/synthetic_patients.csv --output outputs/scored_patients.csv
 PYTHONPATH=src python3 -m unittest discover -s tests
 ```
@@ -60,10 +62,18 @@ pip install -e ".[ml,api,dev]"
 uvicorn chd_risk.api:app --reload
 ```
 
+Stage B 本地真实世界数据可行性审计（不会导出患者级数据，只输出聚合统计）：
+
+```bash
+python3 scripts/stage_b_local_data_feasibility.py --workbook /path/to/local.xlsx --sheet 冠心病21 --output-dir outputs/stage_b_local_data
+```
+
 装好完整机器学习依赖后，可以训练 tabular baseline：
 
 ```bash
 chd-risk train-tabular data/deidentified_research_table.csv --outcome-col outcome_chd
+# 时间外验证式划分（按 index_date 排序，前 85% 训练 / 后 15% 测试）：
+chd-risk train-tabular data/deidentified_research_table.csv --outcome-col outcome_chd --split temporal --date-col index_date
 ```
 
 ## Stage B 本地数据可行性评估
@@ -86,10 +96,24 @@ python3 scripts/stage_b_local_data_feasibility.py \
 - `data/` 只允许放合成数据或脱敏后的结构模板，真实患者级数据不应提交到 GitHub。
 - `scripts/stage_b_local_data_feasibility.py` 只是本地真实世界数据可行性审计，不会训练模型，也不代表临床验证完成。
 
-## 下一步
+## 重要提醒：合成数据仅用于流程冒烟测试
 
-- 接入医院/社区导出的去标识化字段映射。
-- 按 `docs/variable_dictionary.md` 固化正式变量字典。
-- 训练 Logistic/Cox、随机森林、XGBoost、LightGBM 并输出验证报告。
-- 加入 SHAP 解释、校准曲线、DCA、NRI/IDI。
+`data/synthetic_patients.csv` 的 `outcome_chd` 标签由原型模型自身概率生成，属于循环论证，
+**在其上训练得到的任何 AUC/指标都没有评估意义**。它只用于验证训练-评估-报告软件流程。
+真实建模必须使用去标识化的本地研究宽表（见 `data/stage_b_research_table_schema.csv`）。
+
+## 当前进度（2026-08-04 更新）
+
+已完成：
+
+- ✅ 本地 Stage B 可行性审计（`scripts/stage_b_local_data_feasibility.py`，输出聚合统计，不导出患者级数据）。
+- ✅ 本地研究宽表构建 ETL（`scripts/build_research_table.py` → `data/processed/research_table_local.csv`，提取规则见 `docs/research_table_extraction.md`）。
+- ✅ 多模型训练与验证报告（Logistic / 随机森林 / XGBoost / LightGBM，随机划分 + 时间外划分，AUC/Brier/灵敏度/特异度/F1/校准分箱/SHAP 解释），见 `docs/stage_c_local_model_exploration.md`。
+
+尚待完成：
+
+- 数据科按 `data/stage_b_research_table_schema.csv` 导出含 LIS 检验、结构化血压/血脂/血糖、**非 CHD 对照**的更大规模研究宽表。
+- 文本提取规则 ≥5% 人工抽样复核。
+- DCA、NRI/IDI、Cox 生存分析、校准曲线图。
 - 将评分结果嵌入随访、复评、转诊和反馈闭环表单。
+- 伦理审查、临床专家复核与上线审批。

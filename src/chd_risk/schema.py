@@ -3,7 +3,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
-
 TRUE_VALUES = {"1", "true", "t", "yes", "y", "是", "有", "阳性"}
 FALSE_VALUES = {"0", "false", "f", "no", "n", "否", "无", "阴性"}
 
@@ -23,7 +22,7 @@ def parse_int(value: Any) -> int | None:
     parsed = parse_float(value)
     if parsed is None:
         return None
-    return int(parsed)
+    return round(parsed)
 
 
 def parse_bool(value: Any) -> bool | None:
@@ -85,7 +84,7 @@ class PatientSnapshot:
     reference_date: str | None = None
 
     @classmethod
-    def from_mapping(cls, payload: dict[str, Any]) -> "PatientSnapshot":
+    def from_mapping(cls, payload: dict[str, Any]) -> PatientSnapshot:
         patient_id = parse_text(payload.get("patient_id")) or "unknown"
         age = parse_int(payload.get("age"))
         if age is None:

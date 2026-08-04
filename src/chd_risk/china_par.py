@@ -6,7 +6,6 @@ from .features import build_feature_vector
 from .model import FeatureRule, WeightedRiskModel
 from .schema import PatientSnapshot
 
-
 CHINA_PAR_PROXY_RULES = (
     FeatureRule("age", 0.85, center=50.0, scale=10.0),
     FeatureRule("male", 0.25),

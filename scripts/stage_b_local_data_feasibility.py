@@ -4,9 +4,9 @@ import argparse
 import json
 import re
 import warnings
-from datetime import date
+from collections.abc import Iterable
+from datetime import datetime, timezone
 from pathlib import Path
-from typing import Iterable
 
 
 def _require_pandas():
@@ -81,6 +81,9 @@ REQUIRED_RESEARCH_TABLE_FIELDS = {
     "outcome_date",
     "followup_end_date",
 }
+
+VISIT_ID_ALIASES = ("就诊编号", "visit_id", "就诊号", "visit_no")
+
 
 HEADER_ALIASES = {
     "patient_id": ("patient_id", "患者ID", "研究编号"),
@@ -177,22 +180,40 @@ def audit_workbook(workbook: Path, sheet: str | None = None) -> dict[str, object
     missing_direct_required_fields = sorted(
         field for field, is_present in direct_required_fields.items() if not is_present
     )
+    training_ready = len(missing_direct_required_fields) == 0
+    if training_ready:
+        readiness_reason = (
+            "All required research-table fields are present as direct columns. "
+            "Confirm one-row-per-patient, index_date semantics, outcome horizon, "
+            "and same-source non-CHD controls before training."
+        )
+    else:
+        readiness_reason = (
+            "The workbook is a visit/report-level extract or lacks required patient-level "
+            "columns. It needs a one-patient-one-row research table with structured "
+            "predictors, explicit outcome_chd, outcome_date, followup_end_date, and "
+            "same-source non-CHD controls."
+        )
 
     missing_rates = df.isna().mean().sort_values(ascending=False)
     non_null_counts = df.notna().sum().sort_values(ascending=False)
 
-    unique_patient_id = None
-    if "患者ID" in df.columns:
-        unique_patient_id = int(df["患者ID"].nunique(dropna=True))
-    unique_visit_id = None
-    if "就诊编号" in df.columns:
-        unique_visit_id = int(df["就诊编号"].nunique(dropna=True))
+    def _first_matching_column(candidates):
+        for column in columns:
+            if _matches_any(column, candidates):
+                return column
+        return None
+
+    patient_id_column = _first_matching_column(HEADER_ALIASES["patient_id"])
+    visit_id_column = _first_matching_column(VISIT_ID_ALIASES)
+    unique_patient_id = int(df[patient_id_column].nunique(dropna=True)) if patient_id_column else None
+    unique_visit_id = int(df[visit_id_column].nunique(dropna=True)) if visit_id_column else None
 
     return {
-        "generated_on": str(date.today()),
+        "generated_on": str(datetime.now(timezone.utc).date()),
         "source_workbook_name": workbook.name,
         "sheet": sheet_name,
-        "shape": {"rows": int(len(df)), "columns": int(len(columns))},
+        "shape": {"rows": len(df), "columns": len(columns)},
         "unique_patient_id": unique_patient_id,
         "unique_visit_id": unique_visit_id,
         "columns": columns,
@@ -212,12 +233,9 @@ def audit_workbook(workbook: Path, sheet: str | None = None) -> dict[str, object
         "diagnosis_signal_counts": diagnosis_signal_counts,
         "readiness": {
             "stage": "Stage B local data feasibility",
-            "training_ready": False,
-            "reason": (
-                "The workbook is a visit/report-level extract. It lacks a patient-level "
-                "research table with structured predictors, explicit outcome_chd, "
-                "outcome_date, followup_end_date, and same-source non-CHD controls."
-            ),
+            "training_ready": training_ready,
+            "missing_required_fields": missing_direct_required_fields,
+            "reason": readiness_reason,
         },
         "privacy_guardrail": (
             "This audit reports only aggregate counts, headers, missingness, and keyword "
@@ -241,6 +259,7 @@ def write_report(summary: dict[str, object], output_dir: Path) -> tuple[Path, Pa
     date_ranges = summary["date_ranges"]
     diagnosis_signal_counts = summary["diagnosis_signal_counts"]
     missing_fields = summary["missing_direct_required_fields"]
+    readiness = summary["readiness"]
 
     lines = [
         "# Stage B Local Data Feasibility Report",
@@ -269,17 +288,17 @@ def write_report(summary: dict[str, object], output_dir: Path) -> tuple[Path, Pa
             "",
             "## Training Readiness",
             "",
-            "- Status: not training-ready.",
-            "- Reason: current file is a visit/report-level extract, not a one-patient-one-row research table.",
-            "- Required patient-level outcome fields are not directly present.",
-            "- Structured vitals/labs/risk factors need to be extracted or joined from HIS/LIS/public-health tables.",
-            "- Same-source non-CHD controls are required before fitting a primary-prevention model.",
+            f"- Status: {'training-ready' if readiness['training_ready'] else 'not training-ready'}.",
+            f"- Reason: {readiness['reason']}",
             "",
             "## Missing Direct Research-Table Fields",
             "",
         ]
     )
-    lines.extend(f"- `{field}`" for field in missing_fields)
+    if missing_fields:
+        lines.extend(f"- `{field}`" for field in missing_fields)
+    else:
+        lines.append("- None (all required research-table fields are present as direct columns).")
 
     lines.extend(["", "## Diagnosis Signal Counts", ""])
     for column, counts in diagnosis_signal_counts.items():

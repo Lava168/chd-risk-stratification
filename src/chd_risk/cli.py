@@ -50,7 +50,9 @@ def score_csv(args: argparse.Namespace) -> None:
             }
         )
         scored.append(row)
-    fieldnames = list(scored[0].keys()) if scored else []
+    if not scored:
+        raise SystemExit(f"No rows to score in {input_path}")
+    fieldnames = list(scored[0].keys())
     with output_path.open("w", newline="", encoding="utf-8") as target:
         writer = csv.DictWriter(target, fieldnames=fieldnames)
         writer.writeheader()
@@ -79,6 +81,8 @@ def train_tabular(args: argparse.Namespace) -> None:
         args.input,
         outcome_col=args.outcome_col,
         output_report=args.output_report,
+        split=args.split,
+        date_col=args.date_col,
     )
     _write_json(report)
 
@@ -108,10 +112,13 @@ def build_parser() -> argparse.ArgumentParser:
     quality.add_argument("--output")
     quality.set_defaults(func=quality_report)
 
-    train = subparsers.add_parser("train-tabular", help="Train optional sklearn baseline models")
+    train = subparsers.add_parser("train-tabular", help="Train baseline ML models (Logistic/RF/XGBoost/LightGBM)")
     train.add_argument("input")
     train.add_argument("--outcome-col", default="outcome_chd")
     train.add_argument("--output-report", default="outputs/training_report.json")
+    train.add_argument("--split", choices=["random", "temporal"], default="random",
+                       help="random split or temporal split by index_date (time-external style)")
+    train.add_argument("--date-col", default="index_date")
     train.set_defaults(func=train_tabular)
     return parser
 

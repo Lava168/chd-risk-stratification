@@ -2,13 +2,13 @@ from __future__ import annotations
 
 from .schema import PatientSnapshot
 
-
 FEATURE_LABELS = {
     "age": "年龄",
     "male": "男性",
     "bmi": "BMI",
     "sbp": "收缩压",
     "pulse_pressure": "脉压",
+    "total_chol": "总胆固醇",
     "ldl_c": "LDL-C",
     "hdl_c_low": "HDL-C偏低",
     "fasting_glucose": "空腹血糖",
@@ -64,6 +64,7 @@ def build_feature_vector(snapshot: PatientSnapshot) -> dict[str, float | None]:
         "bmi": snapshot.bmi,
         "sbp": snapshot.sbp,
         "pulse_pressure": pulse_pressure,
+        "total_chol": snapshot.total_chol,
         "ldl_c": snapshot.ldl_c,
         "hdl_c_low": hdl_c_low,
         "fasting_glucose": snapshot.fasting_glucose,

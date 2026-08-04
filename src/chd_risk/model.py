@@ -29,6 +29,7 @@ DEFAULT_FEATURE_RULES = (
     FeatureRule("bmi", 0.25, center=24.0, scale=4.0, positive_only=True),
     FeatureRule("sbp", 0.45, center=120.0, scale=20.0, positive_only=True),
     FeatureRule("pulse_pressure", 0.15, center=40.0, scale=15.0, positive_only=True),
+    FeatureRule("total_chol", 0.30, center=4.8, scale=1.0, positive_only=True),
     FeatureRule("ldl_c", 0.40, center=2.6, scale=0.8, positive_only=True),
     FeatureRule("hdl_c_low", 0.25),
     FeatureRule("fasting_glucose", 0.25, center=5.6, scale=1.5, positive_only=True),
@@ -90,7 +91,7 @@ class WeightedRiskModel:
         Path(path).write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
 
     @classmethod
-    def load(cls, path: str | Path) -> "WeightedRiskModel":
+    def load(cls, path: str | Path) -> WeightedRiskModel:
         payload = json.loads(Path(path).read_text(encoding="utf-8"))
         rules = tuple(FeatureRule(**item) for item in payload["feature_rules"])
         return cls(

@@ -7,14 +7,14 @@ from pathlib import Path
 from .assessment import assess_patient
 from .schema import PatientSnapshot
 
-
 FIELDNAMES = [
     "patient_id", "age", "sex", "bmi", "sbp", "dbp", "total_chol", "ldl_c",
     "hdl_c", "fasting_glucose", "smoker", "diabetes", "hypertension", "ckd",
-    "family_history_chd", "chest_pain_visit_last_year", "ecg_abnormal",
-    "antihypertensive_use", "lipid_lowering_use", "statin_adherence_gap",
+    "atrial_fibrillation", "family_history_chd", "chest_pain_visit_last_year",
+    "ecg_abnormal", "carotid_ultrasound_abnormal", "antihypertensive_use",
+    "lipid_lowering_use", "antiplatelet_use", "statin_adherence_gap",
     "follow_up_interrupted", "outpatient_visits_12m", "emergency_visits_12m",
-    "sbp_trend_6m", "ldl_trend_6m", "medication_adherence_rate", "synthetic_event",
+    "sbp_trend_6m", "ldl_trend_6m", "medication_adherence_rate", "outcome_chd",
 ]
 
 
@@ -46,11 +46,14 @@ def generate_synthetic_records(n: int = 200, seed: int = 42) -> list[dict]:
             "diabetes": diabetes,
             "hypertension": hypertension,
             "ckd": _yes_no(0.04 + max(age - 65, 0) * 0.004),
+            "atrial_fibrillation": _yes_no(0.02 + max(age - 65, 0) * 0.004),
             "family_history_chd": _yes_no(0.12),
             "chest_pain_visit_last_year": _yes_no(0.06 + max(age - 65, 0) * 0.003),
             "ecg_abnormal": _yes_no(0.08 + max(age - 60, 0) * 0.004),
+            "carotid_ultrasound_abnormal": _yes_no(0.03 + max(age - 60, 0) * 0.004),
             "antihypertensive_use": hypertension and _yes_no(0.74),
             "lipid_lowering_use": _yes_no(0.18),
+            "antiplatelet_use": _yes_no(0.10),
             "statin_adherence_gap": adherence < 0.70,
             "follow_up_interrupted": _yes_no(0.12),
             "outpatient_visits_12m": int(max(random.gauss(3.5, 3.0), 0)),
@@ -59,7 +62,10 @@ def generate_synthetic_records(n: int = 200, seed: int = 42) -> list[dict]:
             "ldl_trend_6m": round(random.gauss(0.04, 0.25), 2),
             "medication_adherence_rate": adherence,
         }
-        row["synthetic_event"] = _yes_no(assess_patient(PatientSnapshot.from_mapping(row)).probability * 0.65)
+        # NOTE: the synthetic label is derived from the same prototype model, so any
+        # model fit on synthetic data has NO evaluation meaning. It exists only to
+        # smoke-test the training/reporting pipeline (see README and training report).
+        row["outcome_chd"] = _yes_no(assess_patient(PatientSnapshot.from_mapping(row)).probability * 0.65)
         records.append(row)
     return records
 

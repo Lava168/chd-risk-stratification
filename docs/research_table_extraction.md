@@ -1,0 +1,53 @@
+# 本地研究宽表构建说明（Stage C 前置 ETL）
+
+## 数据来源
+
+- 本地文件：`/Users/mac/Desktop/冠心病2_xinneiyewu0001_20260803154226(3).xlsx`（**不提交 Git**）
+- 工作表：`冠心病21`；规模 30,471 行 × 55 列；246 名患者，27,903 条就诊/报告记录。
+- 该文件为 HIS/病历/检查报告**长表**，不是一人一行的研究宽表，因此需要本 ETL 聚合。
+
+## 生成命令
+
+```bash
+python scripts/build_research_table.py \
+  --workbook "/Users/mac/Desktop/冠心病2_xinneiyewu0001_20260803154226(3).xlsx" \
+  --sheet 冠心病21 \
+  --output data/processed/research_table_local.csv
+```
+
+输出 `data/processed/research_table_local.csv`（已在 `.gitignore` 中，不进 Git）。
+
+## 变量提取规则
+
+| 字段 | 来源 | 规则 |
+|---|---|---|
+| patient_id | 患者ID | 数字研究编号，直接保留 |
+| sex | 性别 | 去除首尾空格；男→male，女→female |
+| age | 年龄 | 取该患者任意一条记录年龄（一致） |
+| index_date | 就诊日期 | 该患者最早就诊日期 |
+| followup_end_date | 就诊/出院/检查/报告日期 | 所有日期列最大值（剔除 <2000 异常值，如 1800-01-01） |
+| sbp / dbp | 体格检查 | 正则 `(?:BP\|血压)[:：]?\s*(\d{2,3})/(\d{2,3})`；取该患者全部读数**中位数** |
+| pulse_pressure | 派生 | sbp - dbp |
+| diabetes | 既往史/现病史/诊断 | 提及"糖尿病"且非"否认/无/排除"→1，否则 0 |
+| hypertension | 既往史/现病史/诊断 | 同上，关键词"高血压" |
+| smoker | 个人史/既往史/现病史 | 明确"否认吸烟/无吸烟史/不吸烟"→0；"吸烟N年/烟龄/已戒烟/长期吸烟"→1；无信息→缺失 |
+| ecg_abnormal | 报告名称/检查结论 | 心电图报告且结论不含"正常"→1（如"窦性心动过缓""心律不齐"） |
+| ever_hospitalized | 就诊类型 | 任一记录为"住院"→1 |
+| hosp_count | 住院次数 | 最大值；无住院记录→缺失 |
+| n_visits | 就诊编号 | 该患者记录条数 |
+| outcome_chd | 就诊诊断/门（急）诊诊断/入院诊断/检查结论 | 含"冠心病/冠状动脉/心肌梗死/PCI/支架/CABG/搭桥/CHD/CAD"任一→1 |
+| outcome_severe_chd | 同上 | 含"心肌梗死/心梗/AMI/STEMI/NSTEMI/PCI/支架/CABG/搭桥"→1（重症标记） |
+| outcome_hospitalized | 就诊类型 | 同 ever_hospitalized（住院利用结局） |
+| outcome_date | 就诊日期 | 首条 CHD 信号记录的日期 |
+
+## 关键限制（必须如实声明）
+
+1. **无对照人群**：246 名患者全部带 CHD 信号（outcome_chd = 246/246）。该库是冠心病业务库，
+   **不能用于普通人群"发病风险"预测**，只能支持冠心病患者**内部分层**探索。
+2. **样本极小**：n=246，任何模型都是探索性原型，AUC 置信区间很宽，禁止用于临床决策。
+3. **自由文本提取未经人工复核**：血压、糖尿病、高血压、吸烟、心电图异常均由规则从文本抽取，
+   正式研究前必须按数据质量目标做 ≥5% 人工抽样复核。
+4. **缺少结构化学检验（LIS）**：total_chol / ldl_c / hdl_c / fasting_glucose / BMI 在本导出中无独立结构化列，
+   研究宽表中为缺失；模型只使用可提取变量。
+5. **结局为"曾患/曾住院"型（prevalent）**：无法严格构造发病队列（incident），不能做生存分析意义上的发病风险建模。
+6. **本表仅限本地**：含患者级派生数据，禁止提交 GitHub。
