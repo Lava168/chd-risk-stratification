@@ -80,6 +80,25 @@
 └── outputs/               # 本地输出目录
 ```
 
+## 界面预览（UI Preview）
+
+面向医生的 Web 界面：患者队列 → 风险评估（概率 + 四级分层）→ 风险原因 → 管理建议（复评/转诊）。
+
+![医生界面-评估报告](docs/screenshots/ui_main.png)
+
+![医生界面-新建评估表单](docs/screenshots/ui_assess_form.png)
+
+启动方式：
+
+```bash
+cd /Users/mac/Documents/冠心病风险评估模型/chd-risk-stratification
+source .venv/bin/activate
+python -m uvicorn chd_risk.api:app --host 127.0.0.1 --port 8765
+# 浏览器打开 http://127.0.0.1:8765/
+```
+
+> 评估由 `models/trained_model_bundle.joblib` 中的训练模型完成（无模型时回退权重原型）。
+
 ## 快速运行
 
 ```bash
