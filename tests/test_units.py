@@ -28,6 +28,11 @@ class SchemaTests(unittest.TestCase):
         self.assertEqual(parse_int("3.2"), 3)
         self.assertIsNone(parse_int(""))
 
+    def test_nan_treated_as_missing(self):
+        import math
+        self.assertIsNone(parse_bool(math.nan))
+        self.assertIsNone(parse_bool("NaN"))
+
 
 class FeatureTests(unittest.TestCase):
     def test_derived_features(self):

@@ -7,10 +7,19 @@ TRUE_VALUES = {"1", "true", "t", "yes", "y", "是", "有", "阳性"}
 FALSE_VALUES = {"0", "false", "f", "no", "n", "否", "无", "阴性"}
 
 
-def parse_float(value: Any) -> float | None:
+def _is_missing(value: Any) -> bool:
     if value is None:
-        return None
-    if isinstance(value, str) and not value.strip():
+        return True
+    if isinstance(value, float) and value != value:  # NaN
+        return True
+    if isinstance(value, str):
+        text = value.strip().lower()
+        return not text or text in {"nan", "null", "none", "na", "n/a"}
+    return False
+
+
+def parse_float(value: Any) -> float | None:
+    if _is_missing(value):
         return None
     try:
         return float(value)
@@ -26,7 +35,7 @@ def parse_int(value: Any) -> int | None:
 
 
 def parse_bool(value: Any) -> bool | None:
-    if value is None:
+    if _is_missing(value):
         return None
     if isinstance(value, bool):
         return value
