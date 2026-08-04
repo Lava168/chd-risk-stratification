@@ -84,9 +84,12 @@
 
 面向医生的 Web 界面：患者队列 → 风险评估（概率 + 四级分层）→ 风险原因 → 管理建议（复评/转诊）。
 
-![医生界面-评估报告](docs/screenshots/ui_main.png)
-
-![医生界面-新建评估表单](docs/screenshots/ui_assess_form.png)
+<p align="center">
+  <img src="docs/screenshots/ui_main.png" alt="Doctor UI - Risk Assessment Report" width="900" style="max-width:100%; height:auto; border:1px solid #e5e7eb; border-radius:10px;">
+</p>
+<p align="center">
+  <img src="docs/screenshots/ui_assess_form.png" alt="Doctor UI - New Assessment Form" width="900" style="max-width:100%; height:auto; border:1px solid #e5e7eb; border-radius:10px;">
+</p>
 
 启动方式：
 
