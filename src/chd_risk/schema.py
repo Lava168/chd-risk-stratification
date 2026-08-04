@@ -4,8 +4,8 @@ import math
 from dataclasses import dataclass
 from typing import Any
 
-TRUE_VALUES = {"1", "true", "t", "yes", "y", "是", "有", "阳性"}
-FALSE_VALUES = {"0", "false", "f", "no", "n", "否", "无", "阴性"}
+TRUE_VALUES = {"1", "1.0", "true", "t", "yes", "y", "是", "有", "阳性"}
+FALSE_VALUES = {"0", "0.0", "false", "f", "no", "n", "否", "无", "阴性"}
 
 
 def _is_missing(value: Any) -> bool:
@@ -40,6 +40,8 @@ def parse_bool(value: Any) -> bool | None:
         return None
     if isinstance(value, bool):
         return value
+    if isinstance(value, (int, float)):
+        return value != 0
     text = str(value).strip().lower()
     if not text:
         return None

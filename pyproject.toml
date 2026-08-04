@@ -33,6 +33,10 @@ dev = [
   "pytest>=8.0",
   "ruff>=0.5"
 ]
+plots = [
+  "matplotlib>=3.8",
+  "seaborn>=0.13"
+]
 
 [project.scripts]
 chd-risk = "chd_risk.cli:main"

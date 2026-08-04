@@ -33,6 +33,13 @@ class SchemaTests(unittest.TestCase):
         self.assertIsNone(parse_bool(math.nan))
         self.assertIsNone(parse_bool("NaN"))
 
+    def test_parse_bool_numeric(self):
+        # CSV 里布尔常被写成 1.0 / 0.0 浮点
+        self.assertTrue(parse_bool(1.0))
+        self.assertTrue(parse_bool("1.0"))
+        self.assertFalse(parse_bool(0.0))
+        self.assertFalse(parse_bool("0.0"))
+
 
 class FeatureTests(unittest.TestCase):
     def test_derived_features(self):
