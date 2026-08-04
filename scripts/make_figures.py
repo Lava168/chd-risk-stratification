@@ -120,7 +120,7 @@ def fig2_roc_temporal(models, X_tr, X_te, y_tr, y_te):
     ax.set_ylabel("True positive rate (sensitivity)")
     ax.set_title(f"ROC curves - temporal validation (n_test={len(y_te)}, events={int(y_te.sum())})", fontsize=12)
     ax.legend(loc="lower right", fontsize=10)
-    fig.tight_layout(); fig.savefig(OUT / "fig2_roc_temporal.png", dpi=160); plt.close(fig)
+    fig.tight_layout(); fig.savefig(OUT / "fig5_roc_temporal.png", dpi=160); plt.close(fig)
 
 
 # ---------------------------------------------------------------- fig 3
@@ -165,7 +165,7 @@ def fig3_calibration(models, X_tr, X_te, y_tr, y_te):
     axes[1].set_xlabel("Predicted probability"); axes[1].set_ylabel("Observed event rate")
     axes[1].set_title("Calibration - test 5-fold OOF", fontsize=12)
     axes[1].legend(fontsize=9); axes[1].set_xlim(0, 1); axes[1].set_ylim(0, 1)
-    fig.tight_layout(); fig.savefig(OUT / "fig3_calibration.png", dpi=160); plt.close(fig)
+    fig.tight_layout(); fig.savefig(OUT / "fig6_calibration.png", dpi=160); plt.close(fig)
 
 
 # ---------------------------------------------------------------- fig 4
@@ -190,7 +190,7 @@ def fig4_shap(X, y, features):
     ax.barh(labels, mean_abs[order], color=colors)
     ax.set_xlabel("Mean |SHAP| (contribution to predicted probability)")
     ax.set_title("XGBoost global feature importance (SHAP)", fontsize=13)
-    fig.tight_layout(); fig.savefig(OUT / "fig4_shap.png", dpi=160); plt.close(fig)
+    fig.tight_layout(); fig.savefig(OUT / "fig7_shap.png", dpi=160); plt.close(fig)
 
 
 # ---------------------------------------------------------------- fig 5
@@ -227,7 +227,7 @@ def fig5_tiers(df):
     for bar, v in zip(bars2, rates.values):
         if np.isfinite(v):
             axes[1].text(bar.get_x() + bar.get_width() / 2, bar.get_height() + 2, f"{v:.0%}", ha="center")
-    fig.tight_layout(); fig.savefig(OUT / "fig5_tiers.png", dpi=160); plt.close(fig)
+    fig.tight_layout(); fig.savefig(OUT / "fig9_tiers.png", dpi=160); plt.close(fig)
 
 
 # ---------------------------------------------------------------- fig 6
@@ -256,7 +256,7 @@ def fig6_model_compare():
         ax.text(i, m + 0.008, f"{m:.3f}", ha="center", fontsize=10)
     ax.axhline(0.8, ls="--", color="gray", lw=1, label="AUC=0.8 reference")
     ax.legend(fontsize=9)
-    fig.tight_layout(); fig.savefig(OUT / "fig6_model_compare.png", dpi=160); plt.close(fig)
+    fig.tight_layout(); fig.savefig(OUT / "fig8_model_compare.png", dpi=160); plt.close(fig)
 
 
 def main():

@@ -326,20 +326,6 @@ python3 scripts/stage_b_local_data_feasibility.py \
 | UCI Heart Disease (Hungarian) | 294 | 36.0% | random_forest | 0.886 |
 | ESL South African Heart Disease (SAheart) | 462 | 34.6% | logistic_regression | 0.821 |
 
-图表：
-
-![fig7 数据集概况](outputs/figures/fig7_public_overview.png)
-
-*图7：各数据集样本量与阳性事件率*
-
-![fig8 模型 AUC 对比](outputs/figures/fig8_public_auc_compare.png)
-
-*图8：4 个数据集 × 4 个模型的测试集 AUC*
-
-![fig9 ROC 曲线](outputs/figures/fig9_public_roc.png)
-
-*图9：各数据集 ROC 曲线（Logistic 或最优模型）*
-
 数据文件位于 `data/public/`（`uci_cleveland.data`、`statlog_heart.dat`、`hungarian_heart.data`、`SAheart.data`）。复现命令：
 
 ```bash
@@ -383,32 +369,43 @@ python scripts/stage_public_multi_validation.py --output-dir outputs/stage_publi
 
 ## 模型报告图
 
-以下图为本地研究宽表（246 例，结局：是否住院）训练 XGBoost 部署模型时生成的报告图，
-用于展示队列、模型表现与风险解释流程。仅用于展示，不代表临床验证结论。
+以下为本地研究队列（246 例，结局：是否住院）训练 XGBoost 部署模型的报告图，以及 4 个公共数据集的验证图，按报告出现顺序编号（图1～图9）。仅用于展示，不代表临床验证结论。
 
 ![图1 队列基线特征](outputs/figures/fig1_cohort.png)
 
-*图1：队列人群基线特征（性别、年龄等分布）*
+*图1：本地研究队列人群基线特征（性别、年龄等分布）*
 
-![图2 时间外验证 ROC](outputs/figures/fig2_roc_temporal.png)
+![图2 公共数据集概况](outputs/figures/fig2_public_overview.png)
 
-*图2：时间外验证 ROC 曲线（XGBoost 时间外 AUC 0.835）*
+*图2：公共数据集样本量与阳性事件率*
 
-![图3 校准曲线](outputs/figures/fig3_calibration.png)
+![图3 公共数据集 AUC 对比](outputs/figures/fig3_public_auc_compare.png)
 
-*图3：校准曲线（预测概率 vs 实际发生率）*
+*图3：4 个数据集 × 4 个模型的测试集 AUC*
 
-![图4 SHAP 特征重要性](outputs/figures/fig4_shap.png)
+![图4 公共数据集 ROC 曲线](outputs/figures/fig4_public_roc.png)
 
-*图4：SHAP 特征重要性排序（主要风险来源解释）*
+*图4：各数据集 ROC 曲线（Logistic 或最优模型）*
 
-![图5 风险分层](outputs/figures/fig5_tiers.png)
+![图5 时间外验证 ROC](outputs/figures/fig5_roc_temporal.png)
 
-*图5：四级风险分层（分数分位数档位：低危/中危/高危/极高危）*
+*图5：本地模型时间外验证 ROC 曲线（XGBoost 时间外 AUC 0.835）*
 
-![图6 多模型对比](outputs/figures/fig6_model_compare.png)
+![图6 校准曲线](outputs/figures/fig6_calibration.png)
 
-*图6：多模型性能对比（CV AUC 与时间外 AUC）*
+*图6：本地模型校准曲线（预测概率 vs 实际发生率）*
+
+![图7 SHAP 特征重要性](outputs/figures/fig7_shap.png)
+
+*图7：SHAP 特征重要性排序（主要风险来源解释）*
+
+![图8 多模型性能对比](outputs/figures/fig8_model_compare.png)
+
+*图8：多模型性能对比（CV AUC 与时间外 AUC）*
+
+![图9 四级风险分层](outputs/figures/fig9_tiers.png)
+
+*图9：四级风险分层（低危/中危/高危相对风险带）*
 
 > 说明：这些图基于本地示例研究宽表生成，仅用于验证训练-评估-报告软件流程；
 > 正式结论需以去标识化、经伦理审查和临床复核的真实队列为准。

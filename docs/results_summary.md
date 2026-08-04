@@ -67,12 +67,14 @@
 | 图 | 内容 | 位置 |
 |---|---|---|
 | 图1 | 本地队列人群基线特征 | `outputs/figures/fig1_cohort.png` |
-| 图2 | 本地模型时间外验证 ROC | `outputs/figures/fig2_roc_temporal.png` |
-| 图3 | 校准曲线 | `outputs/figures/fig3_calibration.png` |
-| 图4 | SHAP 特征重要性 | `outputs/figures/fig4_shap.png` |
-| 图5 | 四级风险分层 | `outputs/figures/fig5_tiers.png` |
-| 图6 | 多模型性能对比 | `outputs/figures/fig6_model_compare.png` |
-| 图7-9 | 公共数据集概况/AUC/ROC | `outputs/figures/fig7~9_public_*.png` |
+| 图2 | 公共数据集概况（样本量/事件率） | `outputs/figures/fig2_public_overview.png` |
+| 图3 | 公共数据集模型 AUC 对比 | `outputs/figures/fig3_public_auc_compare.png` |
+| 图4 | 公共数据集 ROC 曲线 | `outputs/figures/fig4_public_roc.png` |
+| 图5 | 本地模型时间外验证 ROC | `outputs/figures/fig5_roc_temporal.png` |
+| 图6 | 校准曲线 | `outputs/figures/fig6_calibration.png` |
+| 图7 | SHAP 特征重要性 | `outputs/figures/fig7_shap.png` |
+| 图8 | 多模型性能对比 | `outputs/figures/fig8_model_compare.png` |
+| 图9 | 四级风险分层 | `outputs/figures/fig9_tiers.png` |
 
 ## 6. 结论
 

@@ -2,9 +2,9 @@
 
 Reads outputs/stage_public/*_summary.json (produced by
 stage_public_multi_validation.py) and writes:
-- outputs/figures/fig7_public_overview.png   sample size + event rate
-- outputs/figures/fig8_public_auc_compare.png test-set AUC by model & dataset
-- outputs/figures/fig9_public_roc.png        ROC curves per dataset
+- outputs/figures/fig2_public_overview.png   sample size + event rate
+- outputs/figures/fig3_public_auc_compare.png test-set AUC by model & dataset
+- outputs/figures/fig4_public_roc.png        ROC curves per dataset
 
 Run after stage_public_multi_validation.py so the JSON summaries exist.
 """
@@ -53,37 +53,53 @@ def load_reports() -> dict[str, dict]:
     return reports
 
 
-def fig7_overview(reports: dict[str, dict]) -> None:
-    names = [r["dataset"] for r in reports.values()]
-    short = [n.replace("UCI Heart Disease (", "").replace(")", "").replace(
-        "ESL South African Heart Disease (SAheart)", "SAheart") for n in names]
+def _short_name(dataset: str) -> str:
+    if "Cleveland" in dataset:
+        return "Cleveland"
+    if "Statlog" in dataset:
+        return "Statlog"
+    if "Hungarian" in dataset:
+        return "Hungarian"
+    if "SAheart" in dataset:
+        return "SAheart"
+    return dataset
+
+
+def fig2_overview(reports: dict[str, dict]) -> None:
+    short = [_short_name(r["dataset"]) for r in reports.values()]
     n_rows = [r["n_rows"] for r in reports.values()]
     event_rate = [r["event_rate"] * 100 for r in reports.values()]
 
-    fig, axes = plt.subplots(1, 2, figsize=(11, 4.2))
-    bars = axes[0].bar(short, n_rows, color=PALETTE[0], alpha=0.95)
-    for b, v in zip(bars, n_rows):
-        axes[0].text(b.get_x() + b.get_width() / 2, v + 4, str(v),
-                     ha="center", fontsize=10)
-    axes[0].set_title("Sample size by dataset", fontsize=12)
-    axes[0].set_ylabel("Subjects (n)")
-    axes[0].set_ylim(0, max(n_rows) * 1.18)
+    fig, axes = plt.subplots(1, 2, figsize=(12, 4.6))
+    fig.subplots_adjust(wspace=0.32)
 
-    bars = axes[1].bar(short, event_rate, color=PALETTE[4], alpha=0.95)
+    bars = axes[0].bar(short, n_rows, width=0.55, color=PALETTE[0], alpha=0.95)
+    for b, v in zip(bars, n_rows):
+        axes[0].text(b.get_x() + b.get_width() / 2, v + max(n_rows) * 0.02, str(v),
+                     ha="center", va="bottom", fontsize=10)
+    axes[0].set_title("Sample size by dataset", fontsize=12.5)
+    axes[0].set_ylabel("Subjects (n)", fontsize=11)
+    axes[0].set_ylim(0, max(n_rows) * 1.22)
+    axes[0].tick_params(axis="x", labelsize=10.5)
+    axes[0].tick_params(axis="y", labelsize=10)
+
+    bars = axes[1].bar(short, event_rate, width=0.55, color=PALETTE[4], alpha=0.95)
     for b, v in zip(bars, event_rate):
-        axes[1].text(b.get_x() + b.get_width() / 2, v + 1.5, f"{v:.1f}%",
-                     ha="center", fontsize=10)
-    axes[1].set_title("Positive event rate by dataset", fontsize=12)
-    axes[1].set_ylabel("Event rate (%)")
-    axes[1].set_ylim(0, max(event_rate) * 1.18)
+        axes[1].text(b.get_x() + b.get_width() / 2, v + max(event_rate) * 0.02,
+                     f"{v:.1f}%", ha="center", va="bottom", fontsize=10)
+    axes[1].set_title("Positive event rate by dataset", fontsize=12.5)
+    axes[1].set_ylabel("Event rate (%)", fontsize=11)
+    axes[1].set_ylim(0, max(event_rate) * 1.22)
+    axes[1].tick_params(axis="x", labelsize=10.5)
+    axes[1].tick_params(axis="y", labelsize=10)
 
     for ax in axes:
         ax.spines["top"].set_visible(False)
         ax.spines["right"].set_visible(False)
-    fig.tight_layout()
-    fig.savefig(OUT / "fig7_public_overview.png", dpi=160)
+        ax.tick_params(direction="out")
+    fig.savefig(OUT / "fig2_public_overview.png", dpi=160)
     plt.close(fig)
-    print("fig7 ok")
+    print("fig2_public_overview ok")
 
 
 def fig8_auc_compare(reports: dict[str, dict]) -> None:
@@ -119,9 +135,9 @@ def fig8_auc_compare(reports: dict[str, dict]) -> None:
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)
     fig.tight_layout()
-    fig.savefig(OUT / "fig8_public_auc_compare.png", dpi=160)
+    fig.savefig(OUT / "fig3_public_auc_compare.png", dpi=160)
     plt.close(fig)
-    print("fig8 ok")
+    print("fig3_public_auc_compare ok")
 
 
 def fig9_roc(reports: dict[str, dict]) -> None:
@@ -152,9 +168,9 @@ def fig9_roc(reports: dict[str, dict]) -> None:
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)
     fig.tight_layout()
-    fig.savefig(OUT / "fig9_public_roc.png", dpi=160)
+    fig.savefig(OUT / "fig4_public_roc.png", dpi=160)
     plt.close(fig)
-    print("fig9 ok")
+    print("fig4_public_roc ok")
 
 
 def main() -> None:
@@ -165,7 +181,7 @@ def main() -> None:
             "No summaries found in outputs/stage_public/. Run "
             "scripts/stage_public_multi_validation.py first."
         )
-    fig7_overview(reports)
+    fig2_overview(reports)
     fig8_auc_compare(reports)
     fig9_roc(reports)
     print("public validation figures written to outputs/figures/")
