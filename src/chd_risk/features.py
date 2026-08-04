@@ -18,6 +18,10 @@ FEATURE_LABELS = {
     "creatinine": "肌酐",
     "uric_acid": "尿酸",
     "bun": "尿素氮",
+    "has_lipids": "有血脂检验",
+    "has_glucose": "有血糖检验",
+    "has_renal": "有肾功能检验",
+    "has_any_lab": "有任一检验",
     "smoker": "吸烟",
     "diabetes": "糖尿病",
     "hypertension": "高血压",
@@ -80,6 +84,25 @@ def build_feature_vector(snapshot: PatientSnapshot) -> dict[str, float | None]:
         "creatinine": snapshot.creatinine,
         "uric_acid": snapshot.uric_acid,
         "bun": snapshot.bun,
+        "has_lipids": _bool_feature(
+            snapshot.total_chol is not None or snapshot.ldl_c is not None
+            or snapshot.hdl_c is not None or snapshot.triglyceride is not None
+        ),
+        "has_glucose": _bool_feature(
+            snapshot.fasting_glucose is not None or snapshot.glucose is not None
+            or snapshot.hba1c is not None
+        ),
+        "has_renal": _bool_feature(
+            snapshot.creatinine is not None or snapshot.uric_acid is not None
+            or snapshot.bun is not None
+        ),
+        "has_any_lab": _bool_feature(
+            snapshot.total_chol is not None or snapshot.ldl_c is not None
+            or snapshot.hdl_c is not None or snapshot.triglyceride is not None
+            or snapshot.fasting_glucose is not None or snapshot.glucose is not None
+            or snapshot.hba1c is not None or snapshot.creatinine is not None
+            or snapshot.uric_acid is not None or snapshot.bun is not None
+        ),
         "smoker": _bool_feature(snapshot.smoker),
         "diabetes": _bool_feature(snapshot.diabetes),
         "hypertension": _bool_feature(snapshot.hypertension),
