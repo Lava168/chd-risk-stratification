@@ -12,6 +12,16 @@ from pathlib import Path
 
 from PyInstaller.utils.hooks import collect_submodules
 
+
+ASSET_DIR = Path("assets")
+if sys.platform == "darwin":
+    app_icon = ASSET_DIR / "chd-risk-icon.icns"
+elif sys.platform == "win32":
+    app_icon = ASSET_DIR / "chd-risk-icon.ico"
+else:
+    app_icon = ASSET_DIR / "chd-risk-icon.png"
+app_icon_arg = str(app_icon) if app_icon.exists() else None
+
 hiddenimports = [
     "uvicorn.logging",
     "uvicorn.loops",
@@ -102,6 +112,7 @@ exe = EXE(
     upx=False,
     console=False,
     disable_windowed_traceback=False,
+    icon=app_icon_arg,
 )
 
 coll = COLLECT(
@@ -117,7 +128,7 @@ if sys.platform == "darwin":
     app = BUNDLE(
         coll,
         name="CHD Risk Stratification.app",
-        icon=None,
+        icon=app_icon_arg,
         bundle_identifier="com.chd.riskstratification",
         info_plist={
             "CFBundleShortVersionString": "0.1.0",

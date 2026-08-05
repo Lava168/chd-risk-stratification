@@ -12,6 +12,9 @@ call .venv\Scripts\activate.bat
 python -m pip install --upgrade pip
 pip install -e ".[ml,api]" pywebview pyinstaller
 
+echo [build] generating application icons...
+python scripts\build_app_icons.py
+
 echo [build] running PyInstaller...
 python -m PyInstaller --noconfirm --clean chd_risk_desktop.spec
 
