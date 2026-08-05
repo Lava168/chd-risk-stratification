@@ -10,6 +10,9 @@ if [ ! -d .venv ]; then
 fi
 .venv/bin/pip install -e ".[ml,api]" pywebview pyinstaller
 
+echo "[build] generating application icons..."
+.venv/bin/python scripts/build_app_icons.py
+
 echo "[build] running PyInstaller..."
 .venv/bin/python -m PyInstaller --noconfirm --clean chd_risk_desktop.spec
 
