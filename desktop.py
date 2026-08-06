@@ -40,9 +40,10 @@ def _setup_paths() -> Path:
         if venv_libomp.exists():
             libomp_dir = venv_libomp
     if libomp_dir.exists():
-        os.environ["DYLD_FALLBACK_LIBRARY_PATH"] = (
-            str(libomp_dir) + os.environ.get("DYLD_FALLBACK_LIBRARY_PATH", ":/usr/local/lib:/usr/lib")
+        fallback_paths = os.environ.get(
+            "DYLD_FALLBACK_LIBRARY_PATH", "/usr/local/lib:/usr/lib"
         )
+        os.environ["DYLD_FALLBACK_LIBRARY_PATH"] = f"{libomp_dir}:{fallback_paths}"
     return base
 
 

@@ -1,6 +1,8 @@
 import tempfile
+import types
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 import numpy as np
 from sklearn.compose import ColumnTransformer
@@ -75,6 +77,42 @@ class ModelRegistryTests(unittest.TestCase):
         contributors = bundle.top_contributors(snapshot)
         names = {name for name, _ in contributors}
         self.assertNotIn("total_chol", names)  # missing value must not be a "reason"
+
+    def test_xgboost_uses_native_contributions_without_shap(self):
+        class IdentityPreprocessor:
+            def transform(self, frame):
+                return frame.to_numpy(dtype=float)
+
+        class FakeBooster:
+            def predict(self, matrix, pred_contribs=False):
+                self.asserted_matrix = matrix
+                if not pred_contribs:
+                    raise AssertionError("pred_contribs must be enabled")
+                return np.array([[0.6, -0.4, 0.2, -0.1]])
+
+        class FakeXgbModel:
+            def __init__(self):
+                self.booster = FakeBooster()
+
+            def get_booster(self):
+                return self.booster
+
+        fake_xgboost = types.ModuleType("xgboost")
+        fake_xgboost.DMatrix = lambda values: values
+        bundle = TrainedModelBundle(
+            preprocessor=IdentityPreprocessor(),
+            model=FakeXgbModel(),
+            feature_names=["age", "male", "total_chol"],
+            model_name="xgboost",
+        )
+        snapshot = PatientSnapshot.from_mapping(
+            {"patient_id": "R-XGB", "age": 55, "sex": "女", "total_chol": 6.2}
+        )
+
+        with patch.dict("sys.modules", {"xgboost": fake_xgboost, "shap": None}):
+            contributors = bundle.top_contributors(snapshot)
+
+        self.assertEqual([name for name, _ in contributors], ["age", "total_chol"])
 
     def test_load_bundle_missing_path(self):
         self.assertIsNone(load_bundle("/nonexistent/bundle.joblib", use_cache=False))

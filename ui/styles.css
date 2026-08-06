@@ -30,6 +30,9 @@ body {
   font-size: 12px; background: rgba(255,255,255,.16); border: 1px solid rgba(255,255,255,.35);
   padding: 3px 9px; border-radius: 999px;
 }
+.model-badge.ok { background: rgba(47,158,91,.28); }
+.model-badge.warn { background: rgba(217,138,31,.34); }
+.model-badge.offline { background: rgba(214,69,69,.34); }
 .btn {
   border: 1px solid var(--line); background: #fff; color: var(--ink);
   padding: 6px 12px; border-radius: 8px; cursor: pointer; font-size: 13px; transition: all .15s;
@@ -114,6 +117,45 @@ body {
 .toast {
   position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
   background: #111827; color: #fff; padding: 10px 18px; border-radius: 10px; font-size: 14px; z-index: 99;
+}
+
+@media (max-width: 760px) {
+  .topbar { align-items: flex-start; flex-wrap: wrap; gap: 8px; padding: 9px 12px; }
+  .brand { min-width: 0; }
+  .brand > div { min-width: 0; }
+  .brand h1 { font-size: 15px; overflow-wrap: anywhere; }
+  .topbar-right { width: 100%; justify-content: space-between; gap: 8px; }
+  .model-badge { max-width: calc(100% - 112px); overflow-wrap: anywhere; }
+  .layout { display: block; min-height: 0; }
+  .sidebar { border-right: 0; border-bottom: 1px solid var(--line); padding: 8px 10px; }
+  .queue {
+    display: grid; grid-auto-flow: column; grid-auto-columns: minmax(220px, 82vw);
+    gap: 6px; max-height: none; overflow-x: auto; padding-bottom: 3px;
+  }
+  .queue li { margin-bottom: 0; }
+  .sidebar-note { margin: 5px 0 0; }
+  .main { padding: 12px 10px; overflow: visible; }
+  .result-head { align-items: center; flex-wrap: wrap; gap: 8px; }
+  .result-head > div { min-width: 0; }
+  .result-head h2 { font-size: 16px; overflow-wrap: anywhere; }
+  .result-grid { grid-template-columns: minmax(0, 1fr); }
+  .form-grid { grid-template-columns: minmax(0, 1fr); }
+  .form-grid fieldset { min-width: 0; }
+  .form-actions { position: sticky; bottom: 0; padding: 8px 0; background: var(--bg); }
+  .reason-row { grid-template-columns: minmax(80px, 120px) minmax(50px, 1fr) 36px; }
+  .kv { gap: 12px; }
+  .kv .val { max-width: 65%; overflow-wrap: anywhere; }
+}
+
+@media (max-width: 380px) {
+  .sub { display: none; }
+  .topbar-right { align-items: stretch; flex-direction: column; }
+  .model-badge { max-width: none; }
+  .topbar-right .btn { width: 100%; }
+  .form-actions { justify-content: stretch; }
+  .form-actions .btn { flex: 1 1 0; min-width: 0; }
+  .reason-row { grid-template-columns: minmax(72px, 1fr) 32px; }
+  .reason-bar { display: none; }
 }
 
 @media print {

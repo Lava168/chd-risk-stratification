@@ -29,7 +29,13 @@ def create_app():
         total_chol: Optional[float] = None
         ldl_c: Optional[float] = None
         hdl_c: Optional[float] = None
+        triglyceride: Optional[float] = None
         fasting_glucose: Optional[float] = None
+        glucose: Optional[float] = None
+        hba1c: Optional[float] = None
+        creatinine: Optional[float] = None
+        uric_acid: Optional[float] = None
+        bun: Optional[float] = None
         smoker: Optional[bool] = None
         diabetes: Optional[bool] = None
         hypertension: Optional[bool] = None
@@ -53,8 +59,30 @@ def create_app():
         reference_date: Optional[str] = None
 
     @app.get("/health")
-    def health() -> dict[str, str]:
-        return {"status": "ok"}
+    def health() -> dict:
+        try:
+            bundle = load_bundle()
+        except Exception as exc:
+            return {
+                "status": "ok",
+                "model_ready": False,
+                "model_status": "error",
+                "model_source": "weighted_prototype",
+                "model_error": type(exc).__name__,
+            }
+        if bundle is None:
+            return {
+                "status": "ok",
+                "model_ready": False,
+                "model_status": "fallback",
+                "model_source": "weighted_prototype",
+            }
+        return {
+            "status": "ok",
+            "model_ready": True,
+            "model_status": "trained",
+            "model_source": bundle.describe(),
+        }
 
     @app.post("/assess")
     def assess(payload: AssessRequest) -> dict:

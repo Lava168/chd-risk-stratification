@@ -14,15 +14,15 @@
 
 ## 图表
 
-![图2 数据集概况](outputs/figures/fig2_public_overview.png)
+![图2 数据集概况](../outputs/figures/fig2_public_overview.png)
 
 *图2：各数据集样本量与阳性事件率*
 
-![图3 模型 AUC 对比](outputs/figures/fig3_public_auc_compare.png)
+![图3 模型 AUC 对比](../outputs/figures/fig3_public_auc_compare.png)
 
 *图3：4 个数据集 × 4 个模型的测试集 AUC*
 
-![图4 ROC 曲线](outputs/figures/fig4_public_roc.png)
+![图4 ROC 曲线](../outputs/figures/fig4_public_roc.png)
 
 *图4：各数据集 ROC 曲线（Logistic 或最优模型）*
 

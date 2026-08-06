@@ -78,6 +78,17 @@ class TrainedModelBundle:
                 coefs = np.asarray(self.model.coef_).reshape(-1)
                 scaled = np.asarray(transformed).reshape(-1)
                 contributions = coefs * scaled
+            elif hasattr(self.model, "get_booster"):
+                # XGBoost exposes exact TreeSHAP contributions through its native
+                # predictor, avoiding SHAP's optional LLVM/numba runtime at scoring time.
+                import xgboost as xgb
+
+                values = self.model.get_booster().predict(
+                    xgb.DMatrix(transformed), pred_contribs=True
+                )
+                contributions = np.asarray(values).reshape(-1)
+                if contributions.size == len(self.feature_names) + 1:
+                    contributions = contributions[:-1]  # final value is the bias term
             else:
                 import shap
 

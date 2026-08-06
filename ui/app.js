@@ -48,8 +48,14 @@ function renderQueue() {
 function renderResult(p) {
   const t = TIER_STYLE[p.risk_tier_label] || TIER_STYLE["低危"];
   const gauge = `conic-gradient(${t.color} ${(p.risk_probability * 100).toFixed(1)}%, #e8edf3 0)`;
-  const reasons = (p.top_reasons || "").split(";").filter(Boolean).slice(0, 5);
-  const maxReason = 1;
+  const reasons = Array.isArray(p.reasons) && p.reasons.length
+    ? p.reasons.slice(0, 5).map((reason) => ({
+        label: reason.label || reason.feature,
+        contribution: Number(reason.contribution) || 0,
+      }))
+    : (p.top_reasons || "").split(";").filter(Boolean).slice(0, 5)
+        .map((label) => ({ label, contribution: 1 }));
+  const maxReason = Math.max(...reasons.map((reason) => reason.contribution), 0.01);
   $("detail-name").textContent = `患者 ${p.patient_id} · 风险评估报告`;
   $("detail-sub").textContent = `${p.age} 岁 · ${p.sex} · ${p.model_source || "训练模型"}${p.reference_date ? " · " + p.reference_date : ""}`;
   $("detail-body").innerHTML = `
@@ -67,8 +73,10 @@ function renderResult(p) {
     <div>
       <div class="detail-card">
         <h3>主要风险因素</h3>
-        ${reasons.length ? reasons.map((r) => {
-          const row = `<div class="reason-row"><span>${esc(r)}</span><div class="reason-bar"><i style="width:${Math.max(20, 95 / reasons.length)}%;background:${t.color}"></i></div><span class="reason-val">+${(maxReason).toFixed(0)}</span></div>`;
+        ${reasons.length ? reasons.map((reason) => {
+          const width = Math.max(8, Math.min(100, reason.contribution / maxReason * 100));
+          const value = reason.contribution === 1 ? "+1" : `+${reason.contribution.toFixed(2)}`;
+          const row = `<div class="reason-row"><span>${esc(reason.label)}</span><div class="reason-bar"><i style="width:${width}%;background:${t.color}"></i></div><span class="reason-val">${value}</span></div>`;
           return row;
         }).join("") : '<p class="muted">—</p>'}
       </div>
@@ -143,11 +151,17 @@ async function submitAssessment(ev) {
       throw new Error(err.detail || ("HTTP " + resp.status));
     }
     result = await resp.json();
+    updateModelBadge({
+      model_ready: String(result.model_source || "").startsWith("trained:"),
+      model_status: String(result.model_source || "").startsWith("trained:") ? "trained" : "fallback",
+      model_source: result.model_source,
+    });
     // 映射到详情视图
     queue = [{ ...result, patient_id: result.patient_id, risk_probability: result.probability, risk_tier_label: result.tier_label, top_reasons: (result.reasons || []).map(r => r.label).join(";"), next_follow_up_days: result.management_plan.follow_up_days, referral: result.management_plan.referral, plan_owner: result.management_plan.owner, model_source: result.model_source, age: payload.age, sex: payload.sex }, ...queue];
     openDetail(result.patient_id);
     toast("评估完成 ✓");
   } catch (err) {
+    updateModelBadge(null);
     toast("评估失败：" + err.message + "（请确认后端已启动：uvicorn chd_risk.api:app --reload）");
   } finally {
     btn.disabled = false; btn.textContent = "开始评估 →";
@@ -161,12 +175,37 @@ function toast(msg) {
 }
 
 // ===== 模型徽章 =====
+function updateModelBadge(info) {
+  const badge = $("model-badge");
+  badge.classList.remove("ok", "warn", "offline");
+  if (!info) {
+    badge.textContent = "后端未连接";
+    badge.classList.add("offline");
+    badge.title = "无法连接本机评估服务";
+    return;
+  }
+  if (info.model_ready) {
+    badge.textContent = "训练模型已加载";
+    badge.classList.add("ok");
+    badge.title = info.model_source || "训练模型可用";
+    return;
+  }
+  badge.textContent = "规则模型（训练模型不可用）";
+  badge.classList.add("warn");
+  badge.title = info.model_error
+    ? `训练模型加载失败：${info.model_error}`
+    : "未找到训练模型，当前使用规则模型";
+}
+
 async function loadModelInfo() {
   try {
     const r = await fetch("/health");
-    if (r.ok) { $("model-badge").textContent = "后端已连接"; return; }
+    if (r.ok) {
+      updateModelBadge(await r.json());
+      return;
+    }
   } catch (_) { /* ignore */ }
-  $("model-badge").textContent = "演示模式（未连接后端）";
+  updateModelBadge(null);
 }
 
 // ===== 初始化 =====
@@ -176,5 +215,6 @@ $("btn-back").addEventListener("click", () => { activeId = null; $("view-form").
 $("btn-load-sample").addEventListener("click", loadSample);
 $("assess-form").addEventListener("submit", submitAssessment);
 loadModelInfo();
+setInterval(loadModelInfo, 30000);
 renderQueue();
 if (queue.length) openDetail(queue[0].patient_id);

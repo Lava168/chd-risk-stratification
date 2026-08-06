@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>冠心病风险分层管理平台</title>
-<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="styles.css?v=0.1.2">
 </head>
 <body>
 <header class="topbar">
@@ -16,7 +16,7 @@
     </div>
   </div>
   <div class="topbar-right">
-    <span id="model-badge" class="model-badge">模型：加载中…</span>
+    <span id="model-badge" class="model-badge" aria-live="polite">模型：加载中…</span>
     <button class="btn btn-primary" id="btn-new-assess">＋ 新建评估</button>
   </div>
 </header>
@@ -112,6 +112,6 @@
 </main>
 
 <div id="toast" class="toast hidden"></div>
-<script src="app.js"></script>
+<script src="app.js?v=0.1.2"></script>
 </body>
 </html>

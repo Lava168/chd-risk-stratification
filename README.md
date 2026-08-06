@@ -266,7 +266,7 @@ xgboost 在 macOS 上需要 `libomp.dylib`，否则训练模型加载失败（�
 等价手动方式：
 
 ```bash
-export DYLD_FALLBACK_LIBRARY_PATH="$PWD/.venv/lib/libomp"
+export DYLD_FALLBACK_LIBRARY_PATH="$PWD/.venv/lib/libomp:/usr/local/lib:/usr/lib"
 python desktop.py
 ```
 

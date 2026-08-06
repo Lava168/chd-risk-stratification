@@ -31,7 +31,8 @@ api = [
 ]
 dev = [
   "pytest>=8.0",
-  "ruff>=0.5"
+  "ruff>=0.5",
+  "httpx>=0.27"
 ]
 plots = [
   "matplotlib>=3.8",
@@ -46,7 +47,7 @@ target-version = "py39"
 # `X | None` crashes (UP045) and `from __future__ import annotations` breaks
 # FastAPI body resolution for nested models (FA100). api.py intentionally uses
 # Optional[...] without the future import.
-"src/chd_risk/api.py" = ["UP045", "FA100"]
+"src/chd_risk/api.py" = ["UP045", "FA100", "BLE001"]
 
 [project.scripts]
 chd-risk = "chd_risk.cli:main"
